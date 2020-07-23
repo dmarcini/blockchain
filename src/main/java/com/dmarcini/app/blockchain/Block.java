@@ -2,12 +2,13 @@ package com.dmarcini.app.blockchain;
 
 import com.dmarcini.app.stringutil.StringUtil;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Random;
 
-public class Block {
+public class Block implements Serializable {
     private long id;
     private long timestamp;
     private int magicNumber;

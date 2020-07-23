@@ -1,9 +1,10 @@
 package com.dmarcini.app.blockchain;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class Blockchain {
+public class Blockchain implements Serializable {
     private ArrayList<Block> blockchain;
     private int startZerosNum;
 
