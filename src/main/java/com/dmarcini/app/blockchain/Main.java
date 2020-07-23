@@ -1,10 +1,17 @@
 package com.dmarcini.app.blockchain;
 
-public class Main {
-    public static void main(final String[] args) {
-        Blockchain blockchain = new Blockchain();
+import java.util.Scanner;
 
-        blockchain.generateBlocks(10);
+public class Main {
+    private final static Scanner scanner = new Scanner(System.in);
+
+    public static void main(final String[] args) {
+        System.out.println("Enter how many zeros the hash must start with: ");
+        int startZerosNum = scanner.nextInt();
+
+        Blockchain blockchain = new Blockchain(startZerosNum);
+
+        blockchain.generateBlocks(5);
 
         System.out.println(blockchain);
     }

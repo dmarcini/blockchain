@@ -7,7 +7,7 @@ class BlockchainTest {
 
     @BeforeAll
     static void setUp() {
-        blockchain = new Blockchain();
+        blockchain = new Blockchain(0);
     }
 
     @AfterEach
@@ -45,22 +45,52 @@ class BlockchainTest {
     }
 
     @Test
-    void generateBlocks_PreviousBlockHashEqualsHashPreviousBlock_True() {
-        blockchain.generateBlocks(2);
+    void getBlock_CheckIfBlockExist_Failed() {
+        blockchain.generateBlocks(5);
 
-        String firstBlockHash = blockchain.getBlock(0)
-                                          .getHash();
-        String previousBlockHashInSecondBlock = blockchain.getBlock(1)
-                                                          .getPreviousBlockHash();
-
-        Assertions.assertEquals(firstBlockHash, previousBlockHashInSecondBlock);
+        Assertions.assertFalse(blockchain.getBlock(5).isPresent());
     }
 
     @Test
-    void getBlock_GetBlockFromOutsideBlockchain_ThrowsIndexOutOfBoundsException() {
+    void addBlock_Add3Blocks_Succeed() {
+        blockchain.addBlock();
+        blockchain.addBlock();
+        blockchain.addBlock();
+
+        Assertions.assertEquals(3, blockchain.getSize());
+    }
+
+    @Test
+    void removeBlock_RemoveBlockFromNotEmptyBlockchain_Succeed() {
         blockchain.generateBlocks(5);
 
-        Assertions.assertThrows(IndexOutOfBoundsException.class,
-                                () -> blockchain.getBlock(5));
+        Assertions.assertTrue(blockchain.removeBlock(2));
+    }
+
+    @Test
+    void removeBlock_RemoveBlockFromEmptyBlockchain_Failed() {
+        Assertions.assertFalse(blockchain.removeBlock(0));
+    }
+
+    @Test
+    void removeBlock_RemoveBlockWhichDoesntExist_Failed() {
+        blockchain.generateBlocks(3);
+
+        Assertions.assertFalse(blockchain.removeBlock(3));
+    }
+
+    @Test
+    void isValid_IsBlockchainValid_True() {
+        blockchain.generateBlocks(3);
+
+        Assertions.assertTrue(blockchain.isValid());
+    }
+
+    @Test
+    void isValid_IsBlockchainValid_False() {
+        blockchain.generateBlocks(3);
+        blockchain.removeBlock(1);
+
+        Assertions.assertFalse(blockchain.isValid());
     }
 }

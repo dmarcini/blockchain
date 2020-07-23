@@ -7,9 +7,9 @@ class BlockTest {
 
     @Test
     void IDGenerator_GenerateCorrectId_True() {
-        Block block1 = new Block("");
-        Block block2 = new Block("");
+        Block block1 = new Block(0, "");
+        Block block2 = new Block(0, "");
 
-        Assertions.assertNotEquals(block1.getId(), block2.getId());
+        Assertions.assertEquals(block1.getId() + 1, block2.getId());
     }
 }
