@@ -61,36 +61,9 @@ class BlockchainTest {
     }
 
     @Test
-    void removeBlock_RemoveBlockFromNotEmptyBlockchain_Succeed() {
-        blockchain.generateBlocks(5);
-
-        Assertions.assertTrue(blockchain.removeBlock(2));
-    }
-
-    @Test
-    void removeBlock_RemoveBlockFromEmptyBlockchain_Failed() {
-        Assertions.assertFalse(blockchain.removeBlock(0));
-    }
-
-    @Test
-    void removeBlock_RemoveBlockWhichDoesntExist_Failed() {
-        blockchain.generateBlocks(3);
-
-        Assertions.assertFalse(blockchain.removeBlock(3));
-    }
-
-    @Test
     void isValid_IsBlockchainValid_True() {
         blockchain.generateBlocks(3);
 
         Assertions.assertTrue(blockchain.isValid());
-    }
-
-    @Test
-    void isValid_IsBlockchainValid_False() {
-        blockchain.generateBlocks(3);
-        blockchain.removeBlock(1);
-
-        Assertions.assertFalse(blockchain.isValid());
     }
 }

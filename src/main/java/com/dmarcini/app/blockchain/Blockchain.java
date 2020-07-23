@@ -56,16 +56,6 @@ public class Blockchain implements Serializable {
         blockchain.add(new Block(startZerosNum, lastBlockHash));
     }
 
-    public boolean removeBlock(int blockNum) {
-        if (blockNum < 0 || blockNum >= blockchain.size()) {
-            return false;
-        }
-
-        blockchain.remove(blockNum);
-
-        return true;
-    }
-
     public Boolean isValid() {
         if (blockchain.isEmpty()) {
             return true;
