@@ -8,17 +8,14 @@ public class Blockchain implements Serializable {
     private ArrayList<Block> blocks;
     private int startZerosNum;
     private String lastBlockHash;
-    private long nextBlockId;
     private long lastBlockTimeGeneration;
+    private long nextBlockId;
 
     public Blockchain(int startZerosNum) {
         this.blocks = new ArrayList<>();
+        this.startZerosNum = startZerosNum;
         this.lastBlockHash = "0";
         this.nextBlockId = 1;
-    }
-
-    public int getStartZerosNum() {
-        return startZerosNum;
     }
 
     public String getLastBlockHash() {
@@ -38,11 +35,9 @@ public class Blockchain implements Serializable {
     }
 
     public Optional<Block> getBlock(int blockNum) {
-        if (blockNum < 0 || blockNum >= blocks.size()) {
-            return Optional.empty();
-        }
+        boolean isBlockExist = (blockNum < 0 || blockNum >= blocks.size());
 
-        return Optional.of(blocks.get(blockNum));
+        return isBlockExist ? Optional.empty() : Optional.of(blocks.get(blockNum));
     }
 
     public boolean addBlock(Block block) {
@@ -54,6 +49,7 @@ public class Blockchain implements Serializable {
 
         nextBlockId += 1;
         lastBlockHash = block.getCurBlockHash();
+        lastBlockTimeGeneration = block.getTimeGeneration();
 
         regulateStartZerosNum();
 
@@ -61,18 +57,10 @@ public class Blockchain implements Serializable {
     }
 
     public Boolean isValidChain() {
-        if (blocks.isEmpty()) {
-            return true;
-        }
-
-        String prevBlockHash = "0";
-
-        for (var block : blocks) {
-            if (!block.getPrevBlockHash().equals(prevBlockHash)) {
+        for (int i = 1; i < blocks.size(); ++i) {
+            if (!blocks.get(i).getPrevBlockHash().equals(blocks.get(i - 1).getCurBlockHash())) {
                 return false;
             }
-
-            prevBlockHash = block.getCurBlockHash();
         }
 
         return true;
@@ -82,19 +70,14 @@ public class Blockchain implements Serializable {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (var block : blocks) {
-            stringBuilder.append(block.toString()).append("\n");
-        }
+        blocks.forEach(stringBuilder::append);
 
         return stringBuilder.toString();
     }
 
     private boolean isValidBlock(Block block) {
-        if (!block.getCurBlockHash().startsWith("0".repeat(startZerosNum))) {
-            return false;
-        }
-
-        return lastBlockHash.equals(block.getPrevBlockHash());
+        return block.getCurBlockHash().startsWith("0".repeat(startZerosNum)) &&
+               block.getPrevBlockHash().equals(lastBlockHash);
     }
 
     private void regulateStartZerosNum() {

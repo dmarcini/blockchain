@@ -1,8 +1,8 @@
-package com.dmarcini.app.miner;
+package com.dmarcini.app.users;
 
 import com.dmarcini.app.blockchain.Block;
 import com.dmarcini.app.blockchain.Blockchain;
-import com.dmarcini.app.stringutil.StringUtil;
+import com.dmarcini.app.utils.HashGenerator;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -32,9 +32,9 @@ public class Miner implements Runnable {
         long timestamp = new Date().getTime();
         int magicNumber = generator.nextInt(Integer.MAX_VALUE);
 
-        String curBlockHash = StringUtil.applySHA256(blockID +
-                                                     String.valueOf(timestamp) +
-                                                     prevBlockHash + magicNumber);
+        String curBlockHash = HashGenerator.applySHA256(blockID +
+                                                        String.valueOf(timestamp) +
+                                                        prevBlockHash + magicNumber);
         long timeGeneration = Duration.between(start, Instant.now()).toSeconds();
 
         Block block = new Block(blockID, timestamp, magicNumber, prevBlockHash,

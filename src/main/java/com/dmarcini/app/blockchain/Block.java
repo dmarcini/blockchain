@@ -3,13 +3,13 @@ package com.dmarcini.app.blockchain;
 import java.io.Serializable;
 
 public class Block implements Serializable {
-    private long id;
-    private long timestamp;
-    private int magicNumber;
-    private String prevBlockHash;
-    private String curBlockHash;
-    private long createdBy;
-    private long timeGeneration;
+    private final long id;
+    private final long timestamp;
+    private final int magicNumber;
+    private final String prevBlockHash;
+    private final String curBlockHash;
+    private final long createdBy;
+    private final long timeGeneration;
 
     public Block(long id, long timestamp, int magicNumber,
                  String prevBlockHash, String curBlockHash,
@@ -31,6 +31,10 @@ public class Block implements Serializable {
         return curBlockHash;
     }
 
+    public long getTimeGeneration() {
+        return timeGeneration;
+    }
+
     @Override
     public String toString() {
         final StringBuilder stringBuilder = new StringBuilder();
@@ -44,7 +48,7 @@ public class Block implements Serializable {
         stringBuilder.append(prevBlockHash).append("\n");
         stringBuilder.append("Hash of the block: ").append("\n");
         stringBuilder.append(curBlockHash).append("\n");
-        stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n");
+        stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n\n");
 
         return stringBuilder.toString();
     }

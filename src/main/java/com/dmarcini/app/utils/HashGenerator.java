@@ -1,9 +1,9 @@
-package com.dmarcini.app.stringutil;
+package com.dmarcini.app.utils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
-public class StringUtil {
+public class HashGenerator {
     public static String applySHA256(String input) {
         try {
             byte[] hash = MessageDigest.getInstance("SHA-256")

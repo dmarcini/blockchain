@@ -1,7 +1,7 @@
 package com.dmarcini.app;
 
 import com.dmarcini.app.blockchain.Blockchain;
-import com.dmarcini.app.miner.Miner;
+import com.dmarcini.app.users.Miner;
 
 public class Main {
     private final static int MINERS_NUMBER = 5;
