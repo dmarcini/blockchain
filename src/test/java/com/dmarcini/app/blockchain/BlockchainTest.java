@@ -2,68 +2,96 @@ package com.dmarcini.app.blockchain;
 
 import org.junit.jupiter.api.*;
 
+import java.util.ArrayList;
+
 class BlockchainTest {
     static Blockchain blockchain;
 
     @BeforeAll
     static void setUp() {
-        blockchain = new Blockchain(0);
+        blockchain = new Blockchain(2);
+
+        blockchain.setLastBlockTimeGeneration(30);
     }
 
     @AfterEach
-    void clear() {
-        blockchain.removeAllBlocks();
+    void clear() throws NoSuchFieldException, IllegalAccessException {
+        var blocks = Blockchain.class.getDeclaredField("blocks");
+        var lastBlockHash = Blockchain.class.getDeclaredField("lastBlockHash");
+        var startZerosNum = Blockchain.class.getDeclaredField("startZerosNum");
+
+        blocks.setAccessible(true);
+        blocks.set(blockchain, new ArrayList<Block>());
+
+        lastBlockHash.setAccessible(true);
+        lastBlockHash.set(blockchain, "0");
+
+        startZerosNum.setAccessible(true);
+        startZerosNum.set(blockchain, 2);
     }
 
     @Test
-    void generateBlocks_Generate10Blocks_Succeed() {
-        blockchain.generateBlocks(10);
+    void addValidBlock_isValidStartZerosNum_Succeed() {
+        Block block = new Block(1, 1, 2, "0", "00A1",1, 1);
 
-        Assertions.assertEquals(10, blockchain.getSize());
+        Assertions.assertTrue(blockchain.addBlock(block));
     }
 
     @Test
-    void generateBlocks_GenerateLessThan0Blocks_Failed() {
-        blockchain.generateBlocks(-10);
+    void addValidBlock_isValidStartZerosNum_Failed() {
+        Block block = new Block(1, 1, 2, "0", "0A1", 1, 1);
 
-        Assertions.assertEquals(0, blockchain.getSize());
+        Assertions.assertFalse(blockchain.addBlock(block));
     }
 
     @Test
-    void removeAllBlocks_RemoveAllBlocks_Succeed() {
-        blockchain.generateBlocks(10);
-        blockchain.removeAllBlocks();
+    void addBlock_isValidPrevBlockHash_Succeed() {
+        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, 1));
 
-        Assertions.assertEquals(0, blockchain.getSize());
+        Block block = new Block(2, 1, 2, "00A1", "00B1", 1, 1);
+
+        Assertions.assertTrue(blockchain.addBlock(block));
     }
 
     @Test
-    void getSize_GetSizeBlockchainConsisting10Blocks_Succeed() {
-        blockchain.generateBlocks(10);
+    void addValidBlock_isValidPrevBlockHash_Failed() {
+        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, 1));
 
-        Assertions.assertEquals(10, blockchain.getSize());
+        Block block = new Block(2, 1, 2, "00D1", "00B1", 1, 1);
+
+        Assertions.assertFalse(blockchain.addBlock(block));
     }
 
     @Test
     void getBlock_CheckIfBlockExist_Failed() {
-        blockchain.generateBlocks(5);
+        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, 1));
+        blockchain.addBlock(new Block(2, 1, 2, "00A1", "00B1", 1, 1));
 
-        Assertions.assertFalse(blockchain.getBlock(5).isPresent());
-    }
-
-    @Test
-    void addBlock_Add3Blocks_Succeed() {
-        blockchain.addBlock();
-        blockchain.addBlock();
-        blockchain.addBlock();
-
-        Assertions.assertEquals(3, blockchain.getSize());
+        Assertions.assertFalse(blockchain.getBlock(2).isPresent());
     }
 
     @Test
     void isValid_IsBlockchainValid_True() {
-        blockchain.generateBlocks(3);
+        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, 1));
+        blockchain.addBlock(new Block(2, 1, 2, "00A1", "00B1", 1, 1));
+        blockchain.addBlock(new Block(3, 1, 2, "00B1", "00C1", 1, 1));
 
-        Assertions.assertTrue(blockchain.isValid());
+        Assertions.assertTrue(blockchain.isValidChain());
+    }
+
+    @Test
+    void isValid_IsBlockchainValid_False() throws NoSuchFieldException, IllegalAccessException {
+        ArrayList<Block> blocksList = new ArrayList<>();
+
+        blocksList.add(new Block(1, 1, 2, "0", "00A1", 1, 1));
+        blocksList.add(new Block(2, 1, 2, "00D1", "00B1", 1, 1));
+        blocksList.add(new Block(3, 1, 2, "00B1", "00C1", 1, 1));
+
+        var blocks = Blockchain.class.getDeclaredField("blocks");
+
+        blocks.setAccessible(true);
+        blocks.set(blockchain, blocksList);
+
+        Assertions.assertFalse(blockchain.isValidChain());
     }
 }

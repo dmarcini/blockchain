@@ -13,7 +13,6 @@ public class BlockchainSerialization {
             filePath = FILENAME;
         } else {
             filePath = path + "\\" + FILENAME;
-
         }
 
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(filePath))) {

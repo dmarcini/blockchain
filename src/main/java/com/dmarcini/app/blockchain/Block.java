@@ -1,12 +1,6 @@
 package com.dmarcini.app.blockchain;
 
-import com.dmarcini.app.stringutil.StringUtil;
-
 import java.io.Serializable;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Date;
-import java.util.Random;
 
 public class Block implements Serializable {
     private long id;
@@ -14,17 +8,19 @@ public class Block implements Serializable {
     private int magicNumber;
     private String prevBlockHash;
     private String curBlockHash;
-    private long timeHashGeneration;
+    private long createdBy;
+    private long timeGeneration;
 
-    public Block(int startZerosNum, String prevBlockHash) {
-        this.id = IDGenerator.getId();
-        this.timestamp = new Date().getTime();
+    public Block(long id, long timestamp, int magicNumber,
+                 String prevBlockHash, String curBlockHash,
+                 long createdBy, long timeGeneration) {
+        this.id = id;
+        this.timestamp = timestamp;
+        this.magicNumber = magicNumber;
         this.prevBlockHash = prevBlockHash;
-        this.curBlockHash = generateHash(startZerosNum);
-    }
-
-    public long getId() {
-        return id;
+        this.curBlockHash = curBlockHash;
+        this.createdBy = createdBy;
+        this.timeGeneration = timeGeneration;
     }
 
     public String getPrevBlockHash() {
@@ -40,6 +36,7 @@ public class Block implements Serializable {
         final StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("Block:\n");
+        stringBuilder.append("Created by miner # ").append(createdBy).append("\n");
         stringBuilder.append("Id: ").append(id).append("\n");
         stringBuilder.append("Timestamp: ").append(timestamp).append("\n");
         stringBuilder.append("Magic number: ").append(magicNumber).append("\n");
@@ -47,37 +44,8 @@ public class Block implements Serializable {
         stringBuilder.append(prevBlockHash).append("\n");
         stringBuilder.append("Hash of the block: ").append("\n");
         stringBuilder.append(curBlockHash).append("\n");
-        stringBuilder.append("Block was generating for ").append(timeHashGeneration).append(" seconds\n");
+        stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n");
 
         return stringBuilder.toString();
-    }
-
-    private String generateHash(int startZerosNum) {
-        Random generator = new Random();
-        Instant start = Instant.now();
-
-        String hash;
-
-        do {
-            magicNumber = generator.nextInt(Integer.MAX_VALUE);
-
-            hash = StringUtil.applySHA256(id +
-                                          String.valueOf(timestamp) +
-                                          magicNumber +
-                                          this.prevBlockHash);
-
-        } while(!hash.startsWith("0".repeat(startZerosNum)));
-
-        timeHashGeneration = Duration.between(start, Instant.now()).toSeconds();
-
-        return hash;
-    }
-
-    private static class IDGenerator  {
-        private static long id = 1;
-
-        public static long getId() {
-            return id++;
-        }
     }
 }

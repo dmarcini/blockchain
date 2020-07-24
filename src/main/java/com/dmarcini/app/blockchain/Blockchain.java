@@ -5,65 +5,69 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 public class Blockchain implements Serializable {
-    private ArrayList<Block> blockchain;
+    private ArrayList<Block> blocks;
     private int startZerosNum;
+    private String lastBlockHash;
+    private long nextBlockId;
+    private long lastBlockTimeGeneration;
 
-    Blockchain(int startZerosNum) {
-        this.blockchain = new ArrayList<>();
-        this.startZerosNum = startZerosNum;
+    public Blockchain(int startZerosNum) {
+        this.blocks = new ArrayList<>();
+        this.lastBlockHash = "0";
+        this.nextBlockId = 1;
     }
 
-    public void generateBlocks(int blocksNum) {
-        String prevBlockHash;
-
-        if (blockchain.isEmpty()) {
-            prevBlockHash = "0";
-        } else {
-            prevBlockHash = blockchain.get(blockchain.size() - 1).getCurBlockHash();
-        }
-
-        for (int i = 0; i < blocksNum; ++i) {
-            Block block = new Block(startZerosNum, prevBlockHash);
-            prevBlockHash = block.getCurBlockHash();
-
-            blockchain.add(block);
-        }
+    public int getStartZerosNum() {
+        return startZerosNum;
     }
 
-    public void removeAllBlocks() {
-        blockchain.clear();
+    public String getLastBlockHash() {
+        return lastBlockHash;
+    }
+
+    public long getNextBlockId() {
+        return nextBlockId;
+    };
+
+    public void setLastBlockTimeGeneration(long lastBlockTimeGeneration) {
+        this.lastBlockTimeGeneration = lastBlockTimeGeneration;
     }
 
     public int getSize() {
-        return blockchain.size();
+        return blocks.size();
     }
 
     public Optional<Block> getBlock(int blockNum) {
-        if (blockNum < 0 || blockNum >= blockchain.size()) {
+        if (blockNum < 0 || blockNum >= blocks.size()) {
             return Optional.empty();
         }
 
-        return Optional.of(blockchain.get(blockNum));
+        return Optional.of(blocks.get(blockNum));
     }
 
-    public void addBlock() {
-        String lastBlockHash = "0";
-
-        if (!blockchain.isEmpty()) {
-            lastBlockHash = blockchain.get(blockchain.size() - 1).getCurBlockHash();
+    public boolean addBlock(Block block) {
+        if (!isValidBlock(block)) {
+            return false;
         }
 
-        blockchain.add(new Block(startZerosNum, lastBlockHash));
+        blocks.add(block);
+
+        nextBlockId += 1;
+        lastBlockHash = block.getCurBlockHash();
+
+        regulateStartZerosNum();
+
+        return true;
     }
 
-    public Boolean isValid() {
-        if (blockchain.isEmpty()) {
+    public Boolean isValidChain() {
+        if (blocks.isEmpty()) {
             return true;
         }
 
         String prevBlockHash = "0";
 
-        for (var block : blockchain) {
+        for (var block : blocks) {
             if (!block.getPrevBlockHash().equals(prevBlockHash)) {
                 return false;
             }
@@ -78,10 +82,26 @@ public class Blockchain implements Serializable {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (var block : blockchain) {
+        for (var block : blocks) {
             stringBuilder.append(block.toString()).append("\n");
         }
 
         return stringBuilder.toString();
+    }
+
+    private boolean isValidBlock(Block block) {
+        if (!block.getCurBlockHash().startsWith("0".repeat(startZerosNum))) {
+            return false;
+        }
+
+        return lastBlockHash.equals(block.getPrevBlockHash());
+    }
+
+    private void regulateStartZerosNum() {
+        if (lastBlockTimeGeneration <= 1) {
+            ++startZerosNum;
+        } else if(lastBlockTimeGeneration > 60) {
+            --startZerosNum;
+        }
     }
 }
