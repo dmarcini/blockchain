@@ -6,7 +6,7 @@ import com.dmarcini.app.blockchain.Blockchain;
 import java.util.Random;
 
 public class Miner implements Runnable {
-    private static final int BLOCKS_NUMBER_TO_GENERATE = 7;
+    private static final int BLOCKS_NUMBER_TO_GENERATE = 5;
 
     private static final Random generator = new Random();
 

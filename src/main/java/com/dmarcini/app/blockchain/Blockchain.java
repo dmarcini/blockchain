@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public class Blockchain implements Serializable {
     private final ArrayList<Block> blocks;
+    private final ArrayList<Data> data;
     private int startZerosNum;
     private Block curBlock;
 
@@ -16,6 +17,7 @@ public class Blockchain implements Serializable {
 
     public Blockchain(int startZerosNum) {
         this.blocks = new ArrayList<>();
+        this.data = new ArrayList<>();
         this.startZerosNum = startZerosNum;
         this.start = Instant.now();
 
@@ -39,14 +41,20 @@ public class Blockchain implements Serializable {
 
         block.setTimeGeneration(Duration.between(start, Instant.now()).toSeconds());
         block.setCreatorId(creatorId);
+        block.setData(data);
 
         blocks.add(block);
 
         generateNextBlock();
         regulateStartZerosNum();
         resetTimer();
+        clearData();
 
         return true;
+    }
+
+    public void addData(Data data) {
+        this.data.add(data);
     }
 
     public Block getCurBlock() {
@@ -107,6 +115,10 @@ public class Blockchain implements Serializable {
 
     private void resetTimer() {
         start = Instant.now();
+    }
+
+    private void clearData() {
+        data.clear();
     }
 
     private static class BlockIDGenerator implements Serializable {

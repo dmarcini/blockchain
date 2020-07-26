@@ -3,6 +3,7 @@ package com.dmarcini.app.blockchain;
 import com.dmarcini.app.utils.HashGenerator;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Block implements Serializable {
     private final long id;
@@ -10,6 +11,7 @@ public class Block implements Serializable {
     private int nonce;
     private final String prevBlockHash;
     private String curBlockHash;
+    private ArrayList<Data> data;
     private long creatorId;
     private long timeGeneration;
 
@@ -56,6 +58,10 @@ public class Block implements Serializable {
                                                  nonce);
     }
 
+    public void setData(ArrayList<Data> data) {
+        this.data = data;
+    }
+
     @Override
     public String toString() {
         final StringBuilder stringBuilder = new StringBuilder();
@@ -69,7 +75,18 @@ public class Block implements Serializable {
         stringBuilder.append(prevBlockHash).append("\n");
         stringBuilder.append("Hash of the block: ").append("\n");
         stringBuilder.append(curBlockHash).append("\n");
-        stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n\n");
+        stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n");
+        stringBuilder.append("Block data:\n");
+
+        if (data.isEmpty()) {
+            stringBuilder.append("no messages!\n");
+        }
+
+        for (var data : this.data) {
+            stringBuilder.append(data.getClient()).append(": ").append(data.getMessage()).append("\n");
+        }
+
+        stringBuilder.append("\n");
 
         return stringBuilder.toString();
     }
