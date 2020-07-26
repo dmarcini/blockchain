@@ -9,13 +9,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Stream;
 
 class SerializationTest {
-    private final static String SERIALIZED_OBJECT_DIR = "./test-serialized-object/";
+    private final static String SERIALIZED_OBJECT_DIR = "serialized-object/";
     private final static String SERIALIZED_OBJECT_NAME = "object.bin";
 
-    private static TestClass testObject;
+    private static SerializableObject testObject;
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -23,13 +22,13 @@ class SerializationTest {
             throw new IOException("Cannot create dir!");
         }
 
-        ArrayList<TestObjectClass> objects = new ArrayList<>(
-                Arrays.asList(new TestObjectClass("lorem"),
-                        new TestObjectClass("ipsum"),
-                        new TestObjectClass("dolor"))
+        ArrayList<SerializableObject.TestObject> objects = new ArrayList<>(
+                Arrays.asList(new SerializableObject.TestObject("lorem"),
+                        new SerializableObject.TestObject("ipsum"),
+                        new SerializableObject.TestObject("dolor"))
         );
 
-        testObject = new TestClass(objects, "sit", 2020);
+        testObject = new SerializableObject(objects, "sit", 2020);
     }
 
     @AfterAll
@@ -41,36 +40,29 @@ class SerializationTest {
     }
 
     @Test
-    public void serializeDeserialize_serializeDeserializeObject_succeed() throws IOException, ClassNotFoundException {
+    public void serializeDeserialize_SerializeAndDeserializeObject_succeed() throws IOException,
+                                                                                    ClassNotFoundException {
         Serialization.serialize(SERIALIZED_OBJECT_DIR + SERIALIZED_OBJECT_NAME, testObject);
 
-        Optional<TestClass> optTestObject = Serialization.deserialize(SERIALIZED_OBJECT_DIR +
-                                                                      SERIALIZED_OBJECT_NAME);
+        Optional<SerializableObject> optTestObject = Serialization.deserialize(SERIALIZED_OBJECT_DIR +
+                                                                               SERIALIZED_OBJECT_NAME);
 
         Assertions.assertTrue(optTestObject.isPresent() && testObject.equals(optTestObject.get()));
     }
 
-    static class TestObjectClass implements Serializable {
-        private final String name;
-
-        TestObjectClass(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    static class TestClass implements Serializable {
-        private final List<TestObjectClass> objects;
+    static class SerializableObject implements Serializable {
+        private final ArrayList<TestObject> objects;
         private final String text;
         private final int number;
 
-        TestClass(ArrayList<TestObjectClass> objects, String text, int number) {
+        SerializableObject(ArrayList<TestObject> objects, String text, int number) {
             this.objects = objects;
             this.text = text;
             this.number = number;
+        }
+
+        public ArrayList<TestObject> getObjects() {
+            return objects;
         }
 
         @Override
@@ -83,20 +75,19 @@ class SerializationTest {
                 return false;
             }
 
-            TestClass testClass = (TestClass) o;
+            SerializableObject serializableObject = (SerializableObject) o;
 
-            if (SerializationTest.testObject.getObjects().size() != testClass.getObjects().size()) {
+            if (objects.size() != serializableObject.getObjects().size()) {
                 return false;
             }
 
-            for (int i = 0; i < SerializationTest.testObject.getObjects().size(); ++i) {
-                if (!SerializationTest.testObject.getObjects().get(i).getName()
-                                      .equals(testClass.getObjects().get(i).getName())) {
+            for (int i = 0; i < objects.size(); ++i) {
+                if (!objects.get(i).getName().equals(serializableObject.getObjects().get(i).getName())) {
                     return false;
                 }
             }
 
-            return number == testClass.number && Objects.equals(text, testClass.text);
+            return number == serializableObject.number && Objects.equals(text, serializableObject.text);
         }
 
         @Override
@@ -104,16 +95,16 @@ class SerializationTest {
             return Objects.hash(objects, text, number);
         }
 
-        public ArrayList<TestObjectClass> getObjects() {
-            return (ArrayList<TestObjectClass>) objects;
-        }
+        private static class TestObject implements Serializable {
+            String name;
 
-        public String getText() {
-            return text;
-        }
+            TestObject(String name) {
+                this.name = name;
+            }
 
-        public int getNumber() {
-            return number;
+            public String getName() {
+                return name;
+            }
         }
     }
 

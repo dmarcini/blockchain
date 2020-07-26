@@ -10,20 +10,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BytesConverterTest {
     @Test
-    void toBytesFromBytes_convertToBytesArrayAndFromBytes_succeed() throws IOException, ClassNotFoundException {
-        TestClass testObject = new TestClass("Lorem ipsum", 2020, 3.14);
+    void toBytesFromBytes_ConvertToBytesAndFromBytes_Succeed() throws IOException, ClassNotFoundException {
+        TestObject testObject = new TestObject("Lorem ipsum", 2020, 3.14);
 
         byte[] bytes = BytesConverter.toBytes(testObject);
 
         assertEquals(testObject, BytesConverter.fromBytes(bytes));
     }
 
-    static class TestClass implements Serializable {
+    static class TestObject implements Serializable {
         String text;
         long longNum;
         double doubleNum;
 
-        TestClass(String text, long longNum, double doubleNum) {
+        TestObject(String text, long longNum, double doubleNum) {
             this.text = text;
             this.longNum = longNum;
             this.doubleNum = doubleNum;
@@ -39,11 +39,11 @@ class BytesConverterTest {
                 return false;
             }
 
-            TestClass testClass = (TestClass) o;
+            TestObject testObject = (TestObject) o;
 
-            return longNum == testClass.longNum &&
-                   Double.compare(testClass.doubleNum, doubleNum) == 0 &&
-                   Objects.equals(text, testClass.text);
+            return longNum == testObject.longNum &&
+                   Double.compare(testObject.doubleNum, doubleNum) == 0 &&
+                   Objects.equals(text, testObject.text);
         }
 
         @Override
