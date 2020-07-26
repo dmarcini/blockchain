@@ -1,6 +1,7 @@
 package com.dmarcini.app.blockchain;
 
 public class Data {
+    private long id;
     private final String client;
     private final String message;
 

@@ -43,30 +43,14 @@ class SerializationTest {
         }
     }
 
-
-    public boolean compareTo(TestClass testClass) {
-        if (SerializationTest.testObject.getObjects().size() != testClass.getObjects().size()) {
-            return false;
-        }
-
-        for (int i = 0; i < SerializationTest.testObject.getObjects().size(); ++i) {
-            if (!SerializationTest.testObject.getObjects().get(i).getName()
-                                  .equals(testClass.getObjects().get(i).getName())) {
-                return false;
-            }
-        }
-
-        return SerializationTest.testObject.getText().equals(testClass.getText()) &&
-               SerializationTest.testObject.getNumber() == testClass.getNumber();
-    }
-
     @Test
     public void serializeDeserialize_serializeDeserializeObject_succeed() throws IOException, ClassNotFoundException {
         Serialization.serialize(SERIALIZED_OBJECT_DIR + SERIALIZED_OBJECT_NAME, testObject);
 
-        Optional<TestClass> testObject = Serialization.deserialize(SERIALIZED_OBJECT_DIR + SERIALIZED_OBJECT_NAME);
+        Optional<TestClass> optTestObject = Serialization.deserialize(SERIALIZED_OBJECT_DIR +
+                                                                      SERIALIZED_OBJECT_NAME);
 
-        Assertions.assertTrue(testObject.isPresent() && compareTo(testObject.get()));
+        Assertions.assertTrue(optTestObject.isPresent() && testObject.equals(optTestObject.get()));
     }
 
     static class TestObjectClass implements Serializable {
@@ -90,6 +74,37 @@ class SerializationTest {
             this.objects = objects;
             this.text = text;
             this.number = number;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            TestClass testClass = (TestClass) o;
+
+            if (SerializationTest.testObject.getObjects().size() != testClass.getObjects().size()) {
+                return false;
+            }
+
+            for (int i = 0; i < SerializationTest.testObject.getObjects().size(); ++i) {
+                if (!SerializationTest.testObject.getObjects().get(i).getName()
+                                      .equals(testClass.getObjects().get(i).getName())) {
+                    return false;
+                }
+            }
+
+            return number == testClass.number && Objects.equals(text, testClass.text);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(objects, text, number);
         }
 
         public ArrayList<TestObjectClass> getObjects() {
