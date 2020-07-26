@@ -59,7 +59,7 @@ public class Block implements Serializable {
     }
 
     public void setData(ArrayList<Data> data) {
-        this.data = data;
+        this.data = new ArrayList<>(data);
     }
 
     @Override

@@ -4,18 +4,21 @@ import com.dmarcini.app.blockchain.Block;
 import com.dmarcini.app.blockchain.Blockchain;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Miner implements Runnable {
-    private static final int BLOCKS_NUMBER_TO_GENERATE = 5;
+    private static final int BLOCKS_NUMBER_TO_GENERATE = 7;
 
     private static final Random generator = new Random();
 
     private final long id;
     private final Blockchain blockchain;
+    private final AtomicBoolean isEnd;
 
-    public Miner(Blockchain blockchain) {
+    public Miner(Blockchain blockchain, AtomicBoolean isEnd) {
         this.id = MinerIDGenerator.getId();
         this.blockchain = blockchain;
+        this.isEnd = isEnd;
     }
 
     public void mineBlock() {
@@ -33,6 +36,8 @@ public class Miner implements Runnable {
         while (blockchain.getSize() < BLOCKS_NUMBER_TO_GENERATE) {
             mineBlock();
         }
+
+        isEnd.set(true);
     }
 
     private static class MinerIDGenerator {
