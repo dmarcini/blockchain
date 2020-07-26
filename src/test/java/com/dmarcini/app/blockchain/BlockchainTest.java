@@ -11,60 +11,48 @@ class BlockchainTest {
     @AfterEach
     void clear() throws NoSuchFieldException, IllegalAccessException {
         var blocks = Blockchain.class.getDeclaredField("blocks");
-        var lastBlockHash = Blockchain.class.getDeclaredField("lastBlockHash");
 
         blocks.setAccessible(true);
         blocks.set(blockchain, new ArrayList<Block>());
-
-        lastBlockHash.setAccessible(true);
-        lastBlockHash.set(blockchain, "0");
     }
 
     @Test
     void addValidBlock_isValidStartZerosNum_Succeed() {
-        Block block = new Block(1, 1, 2, "0", "00A1",1, timeGeneration);
-
-        Assertions.assertTrue(blockchain.addBlock(block));
+        Assertions.assertTrue(blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1));
     }
 
     @Test
     void addValidBlock_isValidStartZerosNum_Failed() {
-        Block block = new Block(1, 1, 2, "0", "0A1", 1, timeGeneration);
-
-        Assertions.assertFalse(blockchain.addBlock(block));
+        Assertions.assertFalse(blockchain.addBlock(new Block(1, "0", "0A1", timeGeneration), 1));
     }
 
     @Test
     void addBlock_isValidPrevBlockHash_Succeed() {
-        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, timeGeneration));
+        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
 
-        Block block = new Block(2, 1, 2, "00A1", "00B1", 1, timeGeneration);
-
-        Assertions.assertTrue(blockchain.addBlock(block));
+        Assertions.assertTrue(blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1));
     }
 
     @Test
     void addValidBlock_isValidPrevBlockHash_Failed() {
-        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, timeGeneration));
+        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
 
-        Block block = new Block(2, 1, 2, "00D1", "00B1", 1, timeGeneration);
-
-        Assertions.assertFalse(blockchain.addBlock(block));
+        Assertions.assertFalse(blockchain.addBlock(new Block(2, "00D1", "00B1", timeGeneration), 1));
     }
 
     @Test
     void getBlock_CheckIfBlockExist_Failed() {
-        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, timeGeneration));
-        blockchain.addBlock(new Block(2, 1, 2, "00A1", "00B1", 1, timeGeneration));
+        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
+        blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1);
 
         Assertions.assertFalse(blockchain.getBlock(2).isPresent());
     }
 
     @Test
     void isValid_IsBlockchainValid_True() {
-        blockchain.addBlock(new Block(1, 1, 2, "0", "00A1", 1, timeGeneration));
-        blockchain.addBlock(new Block(2, 1, 2, "00A1", "00B1", 1, timeGeneration));
-        blockchain.addBlock(new Block(3, 1, 2, "00B1", "00C1", 1, timeGeneration));
+        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
+        blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1);
+        blockchain.addBlock(new Block(3, "00B1", "00C1", timeGeneration), 1);
 
         Assertions.assertTrue(blockchain.isValidChain());
     }
@@ -73,9 +61,9 @@ class BlockchainTest {
     void isValid_IsBlockchainValid_False() throws NoSuchFieldException, IllegalAccessException {
         ArrayList<Block> blocksList = new ArrayList<>();
 
-        blocksList.add(new Block(1, 1, 2, "0", "00A1", 1, timeGeneration));
-        blocksList.add(new Block(2, 1, 2, "00D1", "00B1", 1, timeGeneration));
-        blocksList.add(new Block(3, 1, 2, "00B1", "00C1", 1, timeGeneration));
+        blocksList.add(new Block(1, "0", "00A1", timeGeneration));
+        blocksList.add(new Block(2, "00D1", "00B1", timeGeneration));
+        blocksList.add(new Block(3, "00B1", "00C1", timeGeneration));
 
         var blocks = Blockchain.class.getDeclaredField("blocks");
 

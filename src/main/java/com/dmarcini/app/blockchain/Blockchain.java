@@ -1,33 +1,25 @@
 package com.dmarcini.app.blockchain;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Optional;
 
 public class Blockchain implements Serializable {
-    private ArrayList<Block> blocks;
+    private final ArrayList<Block> blocks;
     private int startZerosNum;
-    private String lastBlockHash;
-    private long lastBlockTimeGeneration;
-    private long nextBlockId;
+    private Block curBlock;
+
+    private Instant start;
 
     public Blockchain(int startZerosNum) {
         this.blocks = new ArrayList<>();
         this.startZerosNum = startZerosNum;
-        this.lastBlockHash = "0";
-        this.nextBlockId = 1;
-    }
+        this.start = Instant.now();
 
-    public String getLastBlockHash() {
-        return lastBlockHash;
-    }
-
-    public long getNextBlockId() {
-        return nextBlockId;
-    };
-
-    public void setLastBlockTimeGeneration(long lastBlockTimeGeneration) {
-        this.lastBlockTimeGeneration = lastBlockTimeGeneration;
+        generateNextBlock();
     }
 
     public int getSize() {
@@ -35,25 +27,30 @@ public class Blockchain implements Serializable {
     }
 
     public Optional<Block> getBlock(int blockNum) {
-        boolean isBlockExist = (blockNum < 0 || blockNum >= blocks.size());
+        boolean isBlockExists = (blockNum < 0 || blockNum >= blocks.size());
 
-        return isBlockExist ? Optional.empty() : Optional.of(blocks.get(blockNum));
+        return isBlockExists ? Optional.empty() : Optional.of(blocks.get(blockNum));
     }
 
-    public boolean addBlock(Block block) {
+    public boolean addBlock(Block block, long creatorId) {
         if (!isValidBlock(block)) {
             return false;
         }
 
+        block.setTimeGeneration(Duration.between(start, Instant.now()).toSeconds());
+        block.setCreatorId(creatorId);
+
         blocks.add(block);
 
-        nextBlockId += 1;
-        lastBlockHash = block.getCurBlockHash();
-        lastBlockTimeGeneration = block.getTimeGeneration();
-
+        generateNextBlock();
         regulateStartZerosNum();
+        resetTimer();
 
         return true;
+    }
+
+    public Block getCurBlock() {
+        return curBlock;
     }
 
     public Boolean isValidChain() {
@@ -76,15 +73,47 @@ public class Blockchain implements Serializable {
     }
 
     private boolean isValidBlock(Block block) {
+        String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getCurBlockHash() : "0";
+
         return block.getCurBlockHash().startsWith("0".repeat(startZerosNum)) &&
-               block.getPrevBlockHash().equals(lastBlockHash);
+               block.getPrevBlockHash().equals(prevBlockHash);
     }
 
     private void regulateStartZerosNum() {
-        if (lastBlockTimeGeneration <= 1) {
+        long timeGeneration = getLastBlock().isPresent() ? getLastBlock().get().getTimeGeneration() : 0;
+
+        if (timeGeneration <= 1) {
             ++startZerosNum;
-        } else if(lastBlockTimeGeneration > 60) {
+        } else if(timeGeneration > 60) {
             --startZerosNum;
+        }
+    }
+
+    private void generateNextBlock() {
+        long blockId = BlockIDGenerator.getId();
+        long timestamp = new Date().getTime();
+        String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getCurBlockHash() : "0";
+
+        curBlock = new Block(blockId, timestamp, prevBlockHash);
+    }
+
+    private Optional<Block> getLastBlock() {
+        if (blocks.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(blocks.get(blocks.size() - 1));
+    }
+
+    private void resetTimer() {
+        start = Instant.now();
+    }
+
+    private static class BlockIDGenerator implements Serializable {
+        private static long id = 1;
+
+        public static long getId() {
+            return id++;
         }
     }
 }
