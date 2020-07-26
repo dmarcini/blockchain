@@ -34,13 +34,10 @@ class SerializationTest {
 
     @AfterAll
     static void tearDown() throws IOException {
-        Path root = Paths.get(SERIALIZED_OBJECT_DIR);
-
-        try (Stream<Path> walk = Files.walk(root)) {
-            walk.sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
-        }
+        Files.walk(Paths.get(SERIALIZED_OBJECT_DIR))
+             .sorted(Comparator.reverseOrder())
+             .map(Path::toFile)
+             .forEach(File::delete);
     }
 
     @Test
