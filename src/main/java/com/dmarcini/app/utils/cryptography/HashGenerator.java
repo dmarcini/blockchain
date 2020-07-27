@@ -1,4 +1,4 @@
-package com.dmarcini.app.utils;
+package com.dmarcini.app.utils.cryptography;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

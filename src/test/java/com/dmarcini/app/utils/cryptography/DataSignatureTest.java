@@ -56,10 +56,11 @@ class DataSignatureTest {
                                                                IOException {
         var testObject = new TestObject("Lorem ipsum dolor sit", 2020);
 
-        var signature = DataSignature.sign(BytesConverter.toBytes(testObject), PRIVATE_KEY_FROM_PAIR_PATH);
+        var signature = DataSignature.sign(BytesConverter.toBytes(testObject),
+                                           DataSignature.getPrivateKey(PRIVATE_KEY_FROM_PAIR_PATH));
 
         Assertions.assertTrue(DataSignature.verify(BytesConverter.toBytes(testObject), signature,
-                                                   PUBLIC_KEY_FROM_PAIR_PATH));
+                                                   DataSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
     }
 
     @Test
@@ -68,10 +69,11 @@ class DataSignatureTest {
                                                               IOException {
         var testObject = new TestObject("Lorem ipsum dolor sit", 2020);
 
-        var signature = DataSignature.sign(BytesConverter.toBytes(testObject), PRIVATE_KEY_NOT_FROM_PAIR_PATH);
+        var signature = DataSignature.sign(BytesConverter.toBytes(testObject),
+                                           DataSignature.getPrivateKey(PRIVATE_KEY_NOT_FROM_PAIR_PATH));
 
         Assertions.assertFalse(DataSignature.verify(BytesConverter.toBytes(testObject), signature,
-                               PUBLIC_KEY_FROM_PAIR_PATH));
+                               DataSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
     }
 
     private static class TestObject implements Serializable {

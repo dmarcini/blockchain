@@ -10,11 +10,11 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class DataSignature {
     public static byte[] sign(byte[] data,
-                              String path) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException,
-                                                  InvalidKeyException, SignatureException {
+                              PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
+                                                            SignatureException {
         var messageDataSignature = Signature.getInstance("SHA1withRSA");
 
-        messageDataSignature.initSign(getPrivateKey(path));
+        messageDataSignature.initSign(privateKey);
         messageDataSignature.update(data);
 
         return messageDataSignature.sign();
@@ -22,31 +22,31 @@ public class DataSignature {
 
     public static boolean verify(byte[] data,
                                  byte[] signature,
-                                 String path) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException,
-                                                     InvalidKeyException, SignatureException {
+                                 PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException,
+                                                             SignatureException {
         var dataSignature = Signature.getInstance("SHA1withRSA");
 
-        dataSignature.initVerify(getPublicKey(path));
+        dataSignature.initVerify(publicKey);
         dataSignature.update(data);
 
         return dataSignature.verify(signature);
     }
 
-    private static PrivateKey getPrivateKey(String path) throws IOException, NoSuchAlgorithmException,
-                                                                           InvalidKeySpecException {
-        var keysByte = Files.readAllBytes(new File(path).toPath());
-        var pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(keysByte);
-        var keyFactory = KeyFactory.getInstance("RSA");
-
-        return keyFactory.generatePrivate(pkcs8EncodedKeySpec);
-    }
-
-    private static PublicKey getPublicKey(String path) throws IOException, NoSuchAlgorithmException,
+    public static PublicKey getPublicKey(String path) throws IOException, NoSuchAlgorithmException,
                                                              InvalidKeySpecException {
         var keyBytes = Files.readAllBytes(new File(path).toPath());
         var x509EncodedKeySpec = new X509EncodedKeySpec(keyBytes);
         var keyFactory = KeyFactory.getInstance("RSA");
 
         return keyFactory.generatePublic(x509EncodedKeySpec);
+    }
+
+    public static PrivateKey getPrivateKey(String path) throws IOException, NoSuchAlgorithmException,
+                                                               InvalidKeySpecException {
+        var keysByte = Files.readAllBytes(new File(path).toPath());
+        var pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(keysByte);
+        var keyFactory = KeyFactory.getInstance("RSA");
+
+        return keyFactory.generatePrivate(pkcs8EncodedKeySpec);
     }
 }
