@@ -1,34 +1,21 @@
 package com.dmarcini.app.users;
 
-import com.dmarcini.app.blockchain.Block;
-import com.dmarcini.app.blockchain.Blockchain;
+import com.dmarcini.app.blockchainsystem.Block;
+import com.dmarcini.app.blockchainsystem.Blockchain;
+import com.dmarcini.app.utils.cryptography.HashGenerator;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class Miner implements Runnable {
-    private static final int BLOCKS_NUMBER_TO_GENERATE = 6;
+public class Miner extends User {
+    private static final int BLOCKS_NUMBER_TO_GENERATE = 5;
 
     private static final Random generator = new Random();
+    private static final AtomicLong minerIdGenerator = new AtomicLong(1);
 
-    private final long id;
-    private final Blockchain blockchain;
-    private final AtomicBoolean isEnd;
-
-    public Miner(Blockchain blockchain, AtomicBoolean isEnd) {
-        this.id = MinerIDGenerator.getId();
-        this.blockchain = blockchain;
-        this.isEnd = isEnd;
-    }
-
-    public void mineBlock() {
-        synchronized (blockchain) {
-            Block curBlock = blockchain.getCurBlock();
-
-            curBlock.mine(generator.nextInt(Integer.MAX_VALUE));
-
-            blockchain.addBlock(curBlock, id);
-        }
+    public Miner(String name, Blockchain blockchain, AtomicBoolean isEnd) {
+        super(minerIdGenerator.getAndIncrement(), name, blockchain, isEnd);
     }
 
     @Override
@@ -40,11 +27,18 @@ public class Miner implements Runnable {
         isEnd.set(true);
     }
 
-    private static class MinerIDGenerator {
-        private static long id = 1;
+    private void mineBlock() {
+        synchronized (blockchain) {
+            Block block = blockchain.getCurBlock();
 
-        public static long getId() {
-            return id++;
+            int nonce = generator.nextInt(Integer.MAX_VALUE);
+
+            String hash = HashGenerator.applySHA256(Long.toString(block.getId()) +
+                    block.getTimestamp() +
+                    block.getPrevHash() +
+                    nonce);
+
+            blockchain.addBlock(block, id);
         }
     }
 }
