@@ -18,7 +18,7 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Comparator;
 
-class DataSignatureTest {
+class ObjectSignatureTest {
     private static final String KEYS_DIR = "keys/";
     private static final String PUBLIC_KEY_FROM_PAIR_PATH = KEYS_DIR + "public-key-from-pair";
     private static final String PRIVATE_KEY_FROM_PAIR_PATH = KEYS_DIR + "private-key-from-pair";
@@ -26,20 +26,20 @@ class DataSignatureTest {
 
     @BeforeAll
     static void setUp() throws NoSuchAlgorithmException, IOException {
-        KeysGenerator keysGenerator = new KeysGenerator(1024);
+        RSAKeysGenerator RSAKeysGenerator = new RSAKeysGenerator(1024);
 
-        keysGenerator.generateKeys();
+        RSAKeysGenerator.generateKeys();
 
         if (!new File(KEYS_DIR).mkdir()) {
             throw new IOException("Cannot create dir!");
         }
 
-        keysGenerator.saveToFile(PUBLIC_KEY_FROM_PAIR_PATH, keysGenerator.getPublicKey().getEncoded());
-        keysGenerator.saveToFile(PRIVATE_KEY_FROM_PAIR_PATH, keysGenerator.getPrivateKey().getEncoded());
+        RSAKeysGenerator.saveToFile(PUBLIC_KEY_FROM_PAIR_PATH, RSAKeysGenerator.getPublicKey().getEncoded());
+        RSAKeysGenerator.saveToFile(PRIVATE_KEY_FROM_PAIR_PATH, RSAKeysGenerator.getPrivateKey().getEncoded());
 
-        keysGenerator.generateKeys();
+        RSAKeysGenerator.generateKeys();
 
-        keysGenerator.saveToFile(PRIVATE_KEY_NOT_FROM_PAIR_PATH, keysGenerator.getPrivateKey().getEncoded());
+        RSAKeysGenerator.saveToFile(PRIVATE_KEY_NOT_FROM_PAIR_PATH, RSAKeysGenerator.getPrivateKey().getEncoded());
     }
 
     @AfterAll
@@ -56,11 +56,11 @@ class DataSignatureTest {
                                                                IOException {
         var testObject = new TestObject("Lorem ipsum dolor sit", 2020);
 
-        var signature = DataSignature.sign(BytesConverter.toBytes(testObject),
-                                           DataSignature.getPrivateKey(PRIVATE_KEY_FROM_PAIR_PATH));
+        var signature = ObjectSignature.sign(BytesConverter.toBytes(testObject),
+                                           ObjectSignature.getPrivateKey(PRIVATE_KEY_FROM_PAIR_PATH));
 
-        Assertions.assertTrue(DataSignature.verify(BytesConverter.toBytes(testObject), signature,
-                                                   DataSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
+        Assertions.assertTrue(ObjectSignature.verify(BytesConverter.toBytes(testObject), signature,
+                                                   ObjectSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
     }
 
     @Test
@@ -69,11 +69,11 @@ class DataSignatureTest {
                                                               IOException {
         var testObject = new TestObject("Lorem ipsum dolor sit", 2020);
 
-        var signature = DataSignature.sign(BytesConverter.toBytes(testObject),
-                                           DataSignature.getPrivateKey(PRIVATE_KEY_NOT_FROM_PAIR_PATH));
+        var signature = ObjectSignature.sign(BytesConverter.toBytes(testObject),
+                                           ObjectSignature.getPrivateKey(PRIVATE_KEY_NOT_FROM_PAIR_PATH));
 
-        Assertions.assertFalse(DataSignature.verify(BytesConverter.toBytes(testObject), signature,
-                               DataSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
+        Assertions.assertFalse(ObjectSignature.verify(BytesConverter.toBytes(testObject), signature,
+                               ObjectSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
     }
 
     private static class TestObject implements Serializable {

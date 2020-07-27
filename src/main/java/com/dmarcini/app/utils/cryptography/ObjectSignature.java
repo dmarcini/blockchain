@@ -1,5 +1,7 @@
 package com.dmarcini.app.utils.cryptography;
 
+import com.dmarcini.app.utils.BytesConverter;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,28 +10,28 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
-public class DataSignature {
-    public static byte[] sign(byte[] data,
-                              PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
-                                                            SignatureException {
-        var messageDataSignature = Signature.getInstance("SHA1withRSA");
+public class ObjectSignature {
+    public static <T> byte[] sign(T object,
+                                  PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
+                                                                SignatureException, IOException {
+        var signature = Signature.getInstance("SHA1withRSA");
 
-        messageDataSignature.initSign(privateKey);
-        messageDataSignature.update(data);
+        signature.initSign(privateKey);
+        signature.update(BytesConverter.toBytes(object));
 
-        return messageDataSignature.sign();
+        return signature.sign();
     }
 
-    public static boolean verify(byte[] data,
-                                 byte[] signature,
-                                 PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException,
-                                                             SignatureException {
-        var dataSignature = Signature.getInstance("SHA1withRSA");
+    public static <T> boolean verify(T object,
+                                     byte[] objectSignature,
+                                     PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException,
+                                                                 SignatureException, IOException {
+        var signature = Signature.getInstance("SHA1withRSA");
 
-        dataSignature.initVerify(publicKey);
-        dataSignature.update(data);
+        signature.initVerify(publicKey);
+        signature.update(BytesConverter.toBytes(object));
 
-        return dataSignature.verify(signature);
+        return signature.verify(objectSignature);
     }
 
     public static PublicKey getPublicKey(String path) throws IOException, NoSuchAlgorithmException,

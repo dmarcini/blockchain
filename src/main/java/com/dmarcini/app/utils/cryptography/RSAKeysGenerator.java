@@ -5,12 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.*;
 
-public class KeysGenerator {
+public class RSAKeysGenerator {
     private final KeyPairGenerator keyPairGenerator;
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    public KeysGenerator(int keyLength) throws NoSuchAlgorithmException {
+    public RSAKeysGenerator(int keyLength) throws NoSuchAlgorithmException {
         this.keyPairGenerator = KeyPairGenerator.getInstance("RSA");
 
         this.keyPairGenerator.initialize(keyLength);
