@@ -7,7 +7,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Miner implements Runnable {
-    private static final int BLOCKS_NUMBER_TO_GENERATE = 7;
+    private static final int BLOCKS_NUMBER_TO_GENERATE = 6;
 
     private static final Random generator = new Random();
 

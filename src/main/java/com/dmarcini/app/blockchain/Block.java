@@ -1,6 +1,6 @@
 package com.dmarcini.app.blockchain;
 
-import com.dmarcini.app.utils.HashGenerator;
+import com.dmarcini.app.utils.cryptography.HashGenerator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ public class Block implements Serializable {
     private int nonce;
     private final String prevBlockHash;
     private String curBlockHash;
-    private ArrayList<Data> data;
+    private ArrayList<Message> messages;
     private long creatorId;
     private long timeGeneration;
 
@@ -22,7 +22,7 @@ public class Block implements Serializable {
     }
 
      public Block(long id, String prevBlockHash,
-                 String curBlockHash, long timeGeneration) {
+                  String curBlockHash, long timeGeneration) {
         this.id = id;
         this.prevBlockHash = prevBlockHash;
         this.curBlockHash = curBlockHash;
@@ -35,6 +35,10 @@ public class Block implements Serializable {
 
     public String getCurBlockHash() {
         return curBlockHash;
+    }
+
+    public ArrayList<Message> getMessages() {
+        return messages;
     }
 
     public long getTimeGeneration() {
@@ -58,8 +62,8 @@ public class Block implements Serializable {
                                                  nonce);
     }
 
-    public void setData(ArrayList<Data> data) {
-        this.data = new ArrayList<>(data);
+    public void setMessages(ArrayList<Message> messages) {
+        this.messages = new ArrayList<>(messages);
     }
 
     @Override
@@ -78,12 +82,12 @@ public class Block implements Serializable {
         stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n");
         stringBuilder.append("Block data:\n");
 
-        if (data.isEmpty()) {
+        if (messages.isEmpty()) {
             stringBuilder.append("no messages!\n");
         }
 
-        for (var data : this.data) {
-            stringBuilder.append(data.getClient()).append(": ").append(data.getMessage()).append("\n");
+        for (var data : this.messages) {
+            stringBuilder.append(data.getClient()).append(": ").append(data.getText()).append("\n");
         }
 
         stringBuilder.append("\n");

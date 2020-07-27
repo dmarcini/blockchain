@@ -1,15 +1,24 @@
 package com.dmarcini.app.blockchain;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.SignatureException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Blockchain implements Serializable {
+    private final static AtomicLong blockIdGenerator = new AtomicLong(1);
+    private final static AtomicLong messageIdGenerator = new AtomicLong(1);
+
     private final ArrayList<Block> blocks;
-    private final ArrayList<Data> data;
+    private final ArrayList<Message> messages;
     private int startZerosNum;
     private Block curBlock;
 
@@ -17,7 +26,7 @@ public class Blockchain implements Serializable {
 
     public Blockchain(int startZerosNum) {
         this.blocks = new ArrayList<>();
-        this.data = new ArrayList<>();
+        this.messages = new ArrayList<>();
         this.startZerosNum = startZerosNum;
         this.start = Instant.now();
 
@@ -41,20 +50,25 @@ public class Blockchain implements Serializable {
 
         block.setTimeGeneration(Duration.between(start, Instant.now()).toSeconds());
         block.setCreatorId(creatorId);
-        block.setData(data);
+        block.setMessages(messages);
 
         blocks.add(block);
 
         generateNextBlock();
         regulateStartZerosNum();
         resetTimer();
-        clearData();
+        clearMessages();
 
         return true;
     }
 
-    public void addData(Data data) {
-        this.data.add(data);
+    public void addMessage(Message message,
+                           PrivateKey privateKey) throws SignatureException, NoSuchAlgorithmException,
+                                                            InvalidKeyException, IOException {
+        message.setId(messageIdGenerator.getAndIncrement());
+        message.sign(privateKey);
+
+        messages.add(message);
     }
 
     public Block getCurBlock() {
@@ -62,13 +76,7 @@ public class Blockchain implements Serializable {
     }
 
     public Boolean isValidChain() {
-        for (int i = 1; i < blocks.size(); ++i) {
-            if (!blocks.get(i).getPrevBlockHash().equals(blocks.get(i - 1).getCurBlockHash())) {
-                return false;
-            }
-        }
-
-        return true;
+        return areValidPrevHash() && areValidMessagesId();
     }
 
     @Override
@@ -87,6 +95,32 @@ public class Blockchain implements Serializable {
                block.getPrevBlockHash().equals(prevBlockHash);
     }
 
+    private boolean areValidPrevHash() {
+        for (int i = 1; i < blocks.size(); ++i) {
+            if (!blocks.get(i).getPrevBlockHash().equals(blocks.get(i - 1).getCurBlockHash())) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean areValidMessagesId() {
+        long messageId = -1;
+
+        for (var block : blocks) {
+            for (var message : block.getMessages()) {
+                if (message.getId() <= messageId) {
+                    return false;
+                }
+
+                messageId = message.getId();
+            }
+        }
+
+        return true;
+    }
+
     private void regulateStartZerosNum() {
         long timeGeneration = getLastBlock().isPresent() ? getLastBlock().get().getTimeGeneration() : 0;
 
@@ -98,7 +132,7 @@ public class Blockchain implements Serializable {
     }
 
     private void generateNextBlock() {
-        long blockId = BlockIDGenerator.getId();
+        long blockId = blockIdGenerator.getAndIncrement();
         long timestamp = new Date().getTime();
         String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getCurBlockHash() : "0";
 
@@ -106,26 +140,14 @@ public class Blockchain implements Serializable {
     }
 
     private Optional<Block> getLastBlock() {
-        if (blocks.isEmpty()) {
-            return Optional.empty();
-        }
-
-        return Optional.of(blocks.get(blocks.size() - 1));
+        return blocks.isEmpty() ? Optional.empty() : Optional.of(blocks.get(blocks.size() - 1));
     }
 
     private void resetTimer() {
         start = Instant.now();
     }
 
-    private void clearData() {
-        data.clear();
-    }
-
-    private static class BlockIDGenerator implements Serializable {
-        private static long id = 1;
-
-        public static long getId() {
-            return id++;
-        }
+    private void clearMessages() {
+        messages.clear();
     }
 }

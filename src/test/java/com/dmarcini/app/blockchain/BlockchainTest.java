@@ -1,12 +1,30 @@
 package com.dmarcini.app.blockchain;
 
+import com.dmarcini.app.utils.cryptography.KeysGenerator;
 import org.junit.jupiter.api.*;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.security.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 class BlockchainTest {
     private final static Blockchain blockchain = new Blockchain(2);
     private final static long timeGeneration = 30;
+
+    private static PublicKey publicKey;
+    private static PrivateKey privateKey;
+
+    @BeforeAll
+    static void setUp() throws NoSuchAlgorithmException {
+        var keysGenerator = new KeysGenerator(1024);
+
+        keysGenerator.generateKeys();
+
+        privateKey = keysGenerator.getPrivateKey();
+        publicKey = keysGenerator.getPublicKey();
+    }
 
     @AfterEach
     void clear() throws NoSuchFieldException, IllegalAccessException {
@@ -17,24 +35,24 @@ class BlockchainTest {
     }
 
     @Test
-    void addValidBlock_isValidStartZerosNum_Succeed() {
+    void addValidBlock_IsValidStartZerosNum_Succeed() {
         Assertions.assertTrue(blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1));
     }
 
     @Test
-    void addValidBlock_isValidStartZerosNum_Failed() {
+    void addValidBlock_IsValidStartZerosNum_Failed() {
         Assertions.assertFalse(blockchain.addBlock(new Block(1, "0", "0A1", timeGeneration), 1));
     }
 
     @Test
-    void addBlock_isValidPrevBlockHash_Succeed() {
+    void addBlock_IsValidPrevBlockHash_Succeed() {
         blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
 
         Assertions.assertTrue(blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1));
     }
 
     @Test
-    void addValidBlock_isValidPrevBlockHash_Failed() {
+    void addValidBlock_IsValidPrevBlockHash_Failed() {
         blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
 
         Assertions.assertFalse(blockchain.addBlock(new Block(2, "00D1", "00B1", timeGeneration), 1));
@@ -69,6 +87,45 @@ class BlockchainTest {
 
         blocks.setAccessible(true);
         blocks.set(blockchain, blocksList);
+
+        Assertions.assertFalse(blockchain.isValidChain());
+    }
+
+    @Test
+    void isValid_AreValidMessagesId_True() throws NoSuchAlgorithmException, SignatureException,
+                                                  InvalidKeyException, IOException {
+        blockchain.addMessage(new Message("", "", publicKey), privateKey);
+        blockchain.addMessage(new Message("", "", publicKey), privateKey);
+        blockchain.addMessage(new Message("", "", publicKey), privateKey);
+
+        blockchain.addBlock(new Block(1, "0", "00A1", 30), 1);
+
+        blockchain.addMessage(new Message("", "", publicKey), privateKey);
+        blockchain.addMessage(new Message("", "", publicKey), privateKey);
+
+        blockchain.addBlock(new Block(2, "00A1", "00B1", 30), 1);
+
+        Assertions.assertTrue(blockchain.isValidChain());
+    }
+
+    @Test
+    void isValid_AreValidMessagesId_False() throws NoSuchFieldException, IllegalAccessException {
+        Message msg1 = new Message("", "", publicKey);
+        Message msg2 = new Message("", "", publicKey);
+        Message msg3 = new Message("", "", publicKey);
+
+        msg1.setId(3);
+        msg2.setId(1);
+        msg3.setId(2);
+
+        ArrayList<Message> messagesList = new ArrayList<>(Arrays.asList(msg1, msg2, msg3));
+
+        var messages = Blockchain.class.getDeclaredField("messages");
+
+        messages.setAccessible(true);
+        messages.set(blockchain, messagesList);
+
+        blockchain.addBlock(new Block(1, "0", "00A1", 30), 1);
 
         Assertions.assertFalse(blockchain.isValidChain());
     }
