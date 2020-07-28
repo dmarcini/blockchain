@@ -31,11 +31,19 @@ public class Resources implements Serializable {
         return amount;
     }
 
-    public void addAmount(int amount) {
+    public void addAmount(int amount) throws NegativeAmountException {
+        if (amount < 0) {
+            throw new NegativeAmountException("Amount can't be negative!");
+        }
+
         this.amount += amount;
     }
 
-    public void subtractAmount(int amount) {
+    public void subtractAmount(int amount) throws NegativeAmountException {
+        if (amount < 0 || amount > this.amount) {
+            throw new NegativeAmountException("Amount can't be negative!");
+        }
+
         this.amount -= amount;
     }
 }

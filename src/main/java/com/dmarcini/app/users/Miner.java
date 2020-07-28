@@ -3,6 +3,7 @@ package com.dmarcini.app.users;
 import com.dmarcini.app.blockchain.Block;
 import com.dmarcini.app.blockchain.Blockchain;
 import com.dmarcini.app.blockchain.TransactionPool;
+import com.dmarcini.app.resources.NegativeAmountException;
 import com.dmarcini.app.reward.Cryptocurrency;
 import com.dmarcini.app.utils.cryptography.HashGenerator;
 
@@ -15,11 +16,15 @@ public final class Miner extends User {
     @Override
     public void run() {
         while (!blockchain.areAllBlocksMined()) {
-            mineBlock();
+            try {
+                mineBlock();
+            } catch (NegativeAmountException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private void mineBlock() {
+    private void mineBlock() throws NegativeAmountException {
         synchronized (blockchain) {
             Block block = blockchain.getNotMinedBlock();
 

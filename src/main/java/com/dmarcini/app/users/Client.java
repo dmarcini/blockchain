@@ -3,6 +3,7 @@ package com.dmarcini.app.users;
 import com.dmarcini.app.blockchain.Blockchain;
 import com.dmarcini.app.blockchain.Transaction;
 import com.dmarcini.app.blockchain.TransactionPool;
+import com.dmarcini.app.resources.NegativeAmountException;
 import com.dmarcini.app.resources.Resources;
 import com.dmarcini.app.reward.Cryptocurrency;
 import com.dmarcini.app.utils.cryptography.RSAKeysGenerator;
@@ -32,7 +33,11 @@ public final class Client extends User {
 
     @Override
     public void run() {
-        wallet.addAmount(100);
+        try {
+            wallet.addAmount(100);
+        } catch (NegativeAmountException e) {
+            e.printStackTrace();
+        }
 
         while (!blockchain.areAllBlocksMined()) {
             try {

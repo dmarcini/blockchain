@@ -1,5 +1,6 @@
 package com.dmarcini.app.blockchain;
 
+import com.dmarcini.app.resources.NegativeAmountException;
 import com.dmarcini.app.resources.Resources;
 import com.dmarcini.app.users.User;
 import com.dmarcini.app.utils.Timer;
@@ -54,7 +55,7 @@ public final class Blockchain implements Serializable {
         return isBlockExists ? Optional.of(new Block(blockchain.get(blockNum))) : Optional.empty();
     }
 
-    public synchronized boolean addBlock(Block block, User miner) {
+    public synchronized boolean addBlock(Block block, User miner) throws NegativeAmountException {
         if (!isValidBlock(block)) {
             return false;
         }

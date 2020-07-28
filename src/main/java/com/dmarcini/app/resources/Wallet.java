@@ -15,11 +15,11 @@ public class Wallet implements Serializable {
         return resources;
     }
 
-    public void addAmount(int amount) {
+    public void addAmount(int amount) throws NegativeAmountException {
         resources.addAmount(amount);
     }
 
-    public void subtractAmount(int amount) {
+    public void subtractAmount(int amount) throws NegativeAmountException {
         resources.subtractAmount(amount);
     }
 

@@ -1,5 +1,6 @@
 package com.dmarcini.app.blockchain;
 
+import com.dmarcini.app.resources.NegativeAmountException;
 import com.dmarcini.app.resources.Resources;
 import com.dmarcini.app.users.User;
 import com.dmarcini.app.utils.cryptography.ObjectSignature;
@@ -66,10 +67,10 @@ public final class Transaction implements Serializable {
     }
 
     public void execute() {
-        if (isValid()) {
+        try {
             from.getWallet().subtractAmount(resources.getAmount());
             to.getWallet().addAmount(resources.getAmount());
-        }
+        } catch(NegativeAmountException ignored) {}
     }
 
     @Override
@@ -78,9 +79,5 @@ public final class Transaction implements Serializable {
                "From: " + from.getName() + "\n" +
                "To: " + to.getName() + "\n" +
                "Resources: " + resources.getAmount() + resources.getCryptocurrency().getCurrency() + "\n";
-    }
-
-    private boolean isValid() {
-        return from.getWallet().getResources().getAmount() >= resources.getAmount();
     }
 }
