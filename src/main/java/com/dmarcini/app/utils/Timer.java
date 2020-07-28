@@ -1,9 +1,10 @@
 package com.dmarcini.app.utils;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 
-public class Timer {
+public class Timer implements Serializable {
     private Instant start;
 
     public Timer() {
