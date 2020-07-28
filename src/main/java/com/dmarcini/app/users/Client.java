@@ -39,7 +39,7 @@ public final class Client extends User {
             e.printStackTrace();
         }
 
-        while (!blockchain.areAllBlocksMined()) {
+        while (blockchain.isBlockToMining()) {
             try {
                 doTransaction();
             } catch (NoSuchAlgorithmException | SignatureException |

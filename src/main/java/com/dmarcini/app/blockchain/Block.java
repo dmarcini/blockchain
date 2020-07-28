@@ -13,7 +13,7 @@ public final class Block implements Serializable {
     private final String prevHash;
     private String hash;
     private List<Transaction> transactions;
-    private User creator;
+    private User miner;
 
     public Block(long id, long timestamp, String prevHash) {
         this.id = id;
@@ -30,7 +30,7 @@ public final class Block implements Serializable {
         this.transactions = block.transactions.stream()
                                               .map(Transaction::new)
                                               .collect(Collectors.toList());
-        this.creator = block.creator;
+        this.miner = block.miner;
     }
 
     public long getId() {
@@ -69,12 +69,12 @@ public final class Block implements Serializable {
                                         .collect(Collectors.toList());
     }
 
-    public User getCreator() {
-        return creator;
+    public User getMiner() {
+        return miner;
     }
 
-    public void setCreator(User creator) {
-        this.creator = creator;
+    public void setMiner(User miner) {
+        this.miner = miner;
     }
 
     @Override
@@ -82,7 +82,7 @@ public final class Block implements Serializable {
         final StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("Block:\n");
-        stringBuilder.append("Created by: ").append(creator.getId()).append("\n");
+        stringBuilder.append("Created by: ").append(miner.getId()).append("\n");
         stringBuilder.append("Id: ").append(id).append("\n");
         stringBuilder.append("Timestamp: ").append(timestamp).append("\n");
         stringBuilder.append("Nonce: ").append(nonce).append("\n");

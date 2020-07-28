@@ -1,10 +1,23 @@
-package com.dmarcini.app.blockchainsystem;
+package com.dmarcini.app.blockchain;
 
+import com.dmarcini.app.resources.NegativeAmountException;
+import com.dmarcini.app.resources.Resources;
+import com.dmarcini.app.reward.VirtualCoin;
+import com.dmarcini.app.users.Client;
+import com.dmarcini.app.users.Miner;
+import com.dmarcini.app.users.User;
+import com.dmarcini.app.utils.cryptography.RSAKeysGenerator;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 import java.security.*;
+import java.util.*;
 
 class BlockchainTest {
-/*    private final static Blockchain blockchain = new Blockchain(2);
-    private final static long timeGeneration = 30;
+    private static final Resources reward = new Resources(new VirtualCoin(), 100);
+    private static final TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
     private static PublicKey publicKey;
     private static PrivateKey privateKey;
@@ -19,107 +32,225 @@ class BlockchainTest {
         publicKey = keysGenerator.getPublicKey();
     }
 
-    @AfterEach
-    void clear() throws NoSuchFieldException, IllegalAccessException {
-        var blocks = Blockchain.class.getDeclaredField("blocks");
+    @Test
+    void addValidBlock_IsValidDifficultLevel_Succeed() throws NegativeAmountException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        blocks.setAccessible(true);
-        blocks.set(blockchain, new ArrayList<Block>());
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        Block block = new Block(1, 1, "0");
+
+        block.setHash("00A1");
+
+        Assertions.assertTrue(blockchain.addBlock(block, miner));
     }
 
     @Test
-    void addValidBlock_IsValidStartZerosNum_Succeed() {
-        Assertions.assertTrue(blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1));
+    void addValidBlock_IsValidDifficultLevel_Failed() throws NegativeAmountException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
+
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        Block block = new Block(1, 1, "0");
+
+        block.setHash("0A1");
+
+        Assertions.assertFalse(blockchain.addBlock(block, miner));
     }
 
     @Test
-    void addValidBlock_IsValidStartZerosNum_Failed() {
-        Assertions.assertFalse(blockchain.addBlock(new Block(1, "0", "0A1", timeGeneration), 1));
+    void addBlock_IsValidPrevBlockHash_Succeed() throws NegativeAmountException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
+
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        Block block = new Block(1, 1, "0");
+
+        block.setHash("00A1");
+
+        blockchain.addBlock(block, miner);
+
+        block = new Block(2, 1, "00A1");
+
+        block.setHash("00B1");
+
+        Assertions.assertTrue(blockchain.addBlock(block, miner));
     }
 
     @Test
-    void addBlock_IsValidPrevBlockHash_Succeed() {
-        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
+    void addBlock_IsValidPrevBlockHash_Failed() throws NegativeAmountException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        Assertions.assertTrue(blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1));
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        Block block = new Block(1, 1, "0");
+
+        block.setHash("00A1");
+
+        blockchain.addBlock(block, miner);
+
+        block = new Block(2, 1, "00D1");
+
+        block.setHash("00B1");
+
+        Assertions.assertFalse(blockchain.addBlock(block, miner));
     }
 
-    @Test
-    void addValidBlock_IsValidPrevBlockHash_Failed() {
-        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
-
-        Assertions.assertFalse(blockchain.addBlock(new Block(2, "00D1", "00B1", timeGeneration), 1));
-    }
 
     @Test
-    void getBlock_CheckIfBlockExist_Failed() {
-        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
-        blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1);
+    void isValid_ArePrevHashesValid_True() throws NegativeAmountException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        Assertions.assertFalse(blockchain.getBlock(2).isPresent());
-    }
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        Block block1 = new Block(1, 1, "0");
+        Block block2 = new Block(2, 1, "00A1");
+        Block block3 = new Block(3, 1, "00B1");
 
-    @Test
-    void isValid_IsBlockchainValid_True() {
-        blockchain.addBlock(new Block(1, "0", "00A1", timeGeneration), 1);
-        blockchain.addBlock(new Block(2, "00A1", "00B1", timeGeneration), 1);
-        blockchain.addBlock(new Block(3, "00B1", "00C1", timeGeneration), 1);
+        block1.setHash("00A1");
+        block2.setHash("00B1");
+        block3.setHash("00C1");
+
+        blockchain.addBlock(block1, miner);
+        blockchain.addBlock(block2, miner);
+        blockchain.addBlock(block3, miner);
 
         Assertions.assertTrue(blockchain.isValidChain());
     }
 
     @Test
-    void isValid_IsBlockchainValid_False() throws NoSuchFieldException, IllegalAccessException {
-        ArrayList<Block> blocksList = new ArrayList<>();
+    void isValid_ArePrevHashesValid_False() throws NoSuchFieldException, IllegalAccessException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        blocksList.add(new Block(1, "0", "00A1", timeGeneration));
-        blocksList.add(new Block(2, "00D1", "00B1", timeGeneration));
-        blocksList.add(new Block(3, "00B1", "00C1", timeGeneration));
+        List<Block> blocksList = new ArrayList<>();
 
-        var blocks = Blockchain.class.getDeclaredField("blocks");
+        blocksList.add(new Block(1, 1, "0"));
+        blocksList.add(new Block(2, 1, "00D1"));
+        blocksList.add(new Block(3, 1, "00B1"));
+
+        var blocks = Blockchain.class.getDeclaredField("blockchain");
 
         blocks.setAccessible(true);
         blocks.set(blockchain, blocksList);
 
         Assertions.assertFalse(blockchain.isValidChain());
     }
-/*
+
     @Test
-    void isValid_AreValidMessagesId_True() throws NoSuchAlgorithmException, SignatureException,
-                                                  InvalidKeyException, IOException {
-        blockchain.addMessage(new Transaction("", "", publicKey), privateKey);
-        blockchain.addMessage(new Transaction("", "", publicKey), privateKey);
-        blockchain.addMessage(new Transaction("", "", publicKey), privateKey);
+    void isValid_AreTransactionsValid_True() throws NoSuchAlgorithmException, NegativeAmountException,
+                                                    IOException, SignatureException, InvalidKeyException {
+        Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
+        TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        blockchain.addBlock(new Block(1, "0", "00A1", 30), 1);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
 
-        blockchain.addMessage(new Transaction("", "", publicKey), privateKey);
-        blockchain.addMessage(new Transaction("", "", publicKey), privateKey);
+        Resources resources = new Resources(new VirtualCoin(), 1);
 
-        blockchain.addBlock(new Block(2, "00A1", "00B1", 30), 1);
+        from.getWallet().addAmount(100);
+        to.getWallet().addAmount(100);
+
+        blockchain.addTransaction(new Transaction(from ,to, resources, publicKey), privateKey);
+        blockchain.addTransaction(new Transaction(to, from, resources, publicKey), privateKey);
+        blockchain.addTransaction(new Transaction(from ,to, resources, publicKey), privateKey);
+
+        Block block1 = new Block(1, 1, "0");
+        Block block2 = new Block(2, 1, "00A1");
+
+        block1.setHash("00A1");
+        block2.setHash("00B1");
+
+        blockchain.addBlock(block1, from);
+
+        blockchain.addTransaction(new Transaction(to, from, resources, publicKey), privateKey);
+        blockchain.addTransaction(new Transaction(from ,to, resources, publicKey), privateKey);
+
+        blockchain.addBlock(block2, to);
 
         Assertions.assertTrue(blockchain.isValidChain());
     }
 
     @Test
-    void isValid_AreValidMessagesId_False() throws NoSuchFieldException, IllegalAccessException {
-        Transaction msg1 = new Transaction("", "", publicKey);
-        Transaction msg2 = new Transaction("", "", publicKey);
-        Transaction msg3 = new Transaction("", "", publicKey);
+    void isValid_AreTransactionsValid_False() throws NoSuchAlgorithmException, NegativeAmountException,
+                                                     IOException, SignatureException, InvalidKeyException,
+                                                     NoSuchFieldException, IllegalAccessException {
+        Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
+        TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        msg1.setId(3);
-        msg2.setId(1);
-        msg3.setId(2);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
 
-        ArrayList<Transaction> messagesList = new ArrayList<>(Arrays.asList(msg1, msg2, msg3));
+        Resources resources = new Resources(new VirtualCoin(), 1);
 
-        var messages = Blockchain.class.getDeclaredField("messages");
+        from.getWallet().addAmount(100);
+        to.getWallet().addAmount(100);
 
-        messages.setAccessible(true);
-        messages.set(blockchain, messagesList);
+        Transaction transaction1 = new Transaction(from ,to, resources, publicKey);
+        Transaction transaction2 = new Transaction(to, from, resources, publicKey);
+        Transaction transaction3 = new Transaction(from ,to, resources, publicKey);
 
-        blockchain.addBlock(new Block(1, "0", "00A1", 30), 1);
+        transaction1.setId(4);
+        transaction2.setId(2);
+        transaction3.setId(5);
+
+        transaction1.sign(privateKey);
+        transaction2.sign(privateKey);
+        transaction3.sign(privateKey);
+
+        List<Transaction> transactionList = new LinkedList<>(Arrays.asList(
+                transaction1,
+                transaction2,
+                transaction3
+        ));
+
+        Block block = new Block(1, 1, "0");
+
+        block.setHash("00A1");
+
+        var transactions = Block.class.getDeclaredField("transactions");
+
+        transactions.setAccessible(true);
+        transactions.set(block, transactionList);
+
+        List<Block> blockList = new LinkedList<>(Collections.singletonList(block));
+
+        var blocks = Blockchain.class.getDeclaredField("blockchain");
+
+        blocks.setAccessible(true);
+        blocks.set(blockchain, blockList);
 
         Assertions.assertFalse(blockchain.isValidChain());
-    }*/
+    }
+
+    @Test
+    void getAllTransactions_GetAllTransactionFromAllBlocksInBlockchain_Succeed() throws NegativeAmountException,
+                                                                                        NoSuchAlgorithmException,
+                                                                                        SignatureException,
+                                                                                        InvalidKeyException,
+                                                                                        IOException {
+        Blockchain blockchain = new Blockchain(2, reward, 1);
+
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        User client = new Miner("Theresa", blockchain, new VirtualCoin(), transactionPool);
+        Resources resources = new Resources(new VirtualCoin(), 5);
+        Block block1 = new Block(1, 1, "0");
+        Block block2 = new Block(2, 1, "00A1");
+        Transaction transaction1 = new Transaction(miner, client, resources, publicKey);
+        Transaction transaction2 = new Transaction(client, miner, resources, publicKey);
+
+        miner.getWallet().addAmount(100);
+        client.getWallet().addAmount(100);
+
+        block1.setHash("00A1");
+        block2.setHash("00B1");
+
+        blockchain.addTransaction(transaction1, privateKey);
+        blockchain.addTransaction(transaction2, privateKey);
+
+        blockchain.addBlock(block1, miner);
+
+        blockchain.addTransaction(transaction1, privateKey);
+        blockchain.addTransaction(transaction2, privateKey);
+        blockchain.addTransaction(transaction1, privateKey);
+        blockchain.addTransaction(transaction2, privateKey);
+
+        blockchain.addBlock(block2, miner);
+
+        Assertions.assertEquals(6, blockchain.getAllTransactions().size());
+    }
 }

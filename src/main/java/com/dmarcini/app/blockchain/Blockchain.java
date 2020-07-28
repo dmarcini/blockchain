@@ -49,18 +49,12 @@ public final class Blockchain implements Serializable {
         return notMinedBlock;
     }
 
-    public Optional<Block> getBlock(int blockNum) {
-        boolean isBlockExists = (blockNum >= 0 && blockNum < blockchain.size());
-
-        return isBlockExists ? Optional.of(new Block(blockchain.get(blockNum))) : Optional.empty();
-    }
-
     public synchronized boolean addBlock(Block block, User miner) throws NegativeAmountException {
         if (!isValidBlock(block)) {
             return false;
         }
 
-        block.setCreator(miner);
+        block.setMiner(miner);
         block.setTransactions(transactions);
 
         miner.getWallet().addAmount(reward.getAmount());
@@ -94,8 +88,8 @@ public final class Blockchain implements Serializable {
         return areValidPrevHashes() && areValidTransactions();
     }
 
-    public boolean areAllBlocksMined() {
-        return areAllBlocksMined.get();
+    public boolean isBlockToMining() {
+        return !areAllBlocksMined.get();
     }
 
     @Override

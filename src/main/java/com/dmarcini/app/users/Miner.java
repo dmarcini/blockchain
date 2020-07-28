@@ -15,7 +15,7 @@ public final class Miner extends User {
 
     @Override
     public void run() {
-        while (!blockchain.areAllBlocksMined()) {
+        while (blockchain.isBlockToMining()) {
             try {
                 mineBlock();
             } catch (NegativeAmountException e) {
