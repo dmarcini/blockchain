@@ -4,20 +4,25 @@ import java.io.Serializable;
 
 public class VirtualCoin implements Cryptocurrency, Serializable {
     private final String currency;
-    private final int amount;
+    private final int value;
 
-    public VirtualCoin(int amount) {
+    public VirtualCoin() {
         this.currency = "VC";
-        this.amount = amount;
+        this.value = 1;
     }
 
-    @Override
-    public int getAmount() {
-        return amount;
+    public VirtualCoin(int value) {
+        this.currency = "VC";
+        this.value = value;
     }
 
     @Override
     public String getCurrency() {
         return currency;
+    }
+
+    @Override
+    public int getValue() {
+        return value;
     }
 }
