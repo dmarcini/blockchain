@@ -15,7 +15,7 @@ public final class Transaction implements Serializable {
     private final User to;
     private final Resources resources;
     private final PublicKey publicKey;
-    private byte[] signature;
+    private transient byte[] signature;
 
     public Transaction(User from, User to, Resources resources, PublicKey publicKey) {
         this.from = from;
