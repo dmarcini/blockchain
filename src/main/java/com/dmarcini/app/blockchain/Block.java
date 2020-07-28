@@ -1,4 +1,4 @@
-package com.dmarcini.app.blockchainsystem;
+package com.dmarcini.app.blockchain;
 
 import com.dmarcini.app.users.User;
 
@@ -14,7 +14,6 @@ public final class Block implements Serializable {
     private String hash;
     private List<Transaction> transactions;
     private User creator;
-    private long timeGeneration;
 
     public Block(long id, long timestamp, String prevHash) {
         this.id = id;
@@ -28,9 +27,10 @@ public final class Block implements Serializable {
         this.nonce = block.nonce;
         this.prevHash = block.prevHash;
         this.hash = block.hash;
-        this.transactions = block.transactions.stream().map(Transaction::new).collect(Collectors.toList());
+        this.transactions = block.transactions.stream()
+                                              .map(Transaction::new)
+                                              .collect(Collectors.toList());
         this.creator = block.creator;
-        this.timeGeneration = block.timeGeneration;
     }
 
     public long getId() {
@@ -58,11 +58,15 @@ public final class Block implements Serializable {
     }
 
     public List<Transaction> getTransactions() {
-        return transactions.stream().map(Transaction::new).collect(Collectors.toList());
+        return transactions.stream()
+                           .map(Transaction::new)
+                           .collect(Collectors.toList());
     }
 
     public void setTransactions(List<Transaction> transactions) {
-        this.transactions = transactions.stream().map(Transaction::new).collect(Collectors.toList());
+        this.transactions = transactions.stream()
+                                        .map(Transaction::new)
+                                        .collect(Collectors.toList());
     }
 
     public User getCreator() {
@@ -71,14 +75,6 @@ public final class Block implements Serializable {
 
     public void setCreator(User creator) {
         this.creator = creator;
-    }
-
-    public long getTimeGeneration() {
-        return timeGeneration;
-    }
-
-    public void setTimeGeneration(long timeGeneration) {
-        this.timeGeneration = timeGeneration;
     }
 
     @Override
@@ -94,18 +90,13 @@ public final class Block implements Serializable {
         stringBuilder.append(prevHash).append("\n");
         stringBuilder.append("Hash of the block: ").append("\n");
         stringBuilder.append(hash).append("\n");
-        stringBuilder.append("Block was generating for ").append(timeGeneration).append(" seconds\n");
         stringBuilder.append("Block data:\n");
 
         for (var transaction : transactions) {
-            stringBuilder.append(transaction.getFrom().getName()).append(" sent ");
-
-            for (var resource : transaction.getResources().entrySet()) {
-                stringBuilder.append(resource.getValue()).append(" ")
-                             .append(resource.getKey().getCurrency()).append(" ");
-            }
-
-            stringBuilder.append(" to ").append(transaction.getTo().getName()).append("\n");
+            stringBuilder.append(transaction.getFrom().getName()).append(" sent ")
+                         .append(transaction.getResources().getAmount())
+                         .append(transaction.getResources().getCryptocurrency().getCurrency())
+                         .append(" to ").append(transaction.getTo().getName()).append("\n");
         }
 
         if (transactions.isEmpty()) {

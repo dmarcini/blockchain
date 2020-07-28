@@ -1,9 +1,8 @@
-package com.dmarcini.app.blockchainsystem;
+package com.dmarcini.app.blockchain;
 
-import com.dmarcini.app.reward.Cryptocurrency;
+import com.dmarcini.app.resources.Resources;
 import com.dmarcini.app.users.User;
 import com.dmarcini.app.utils.Timer;
-import com.dmarcini.app.utils.cryptography.ObjectSignature;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -14,10 +13,9 @@ import java.security.SignatureException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public final class Blockchain implements Serializable {
-    private final static int MAX_NUM_BLOCKS_TO_MINING = 5;
-
     private final AtomicLong blockIdGenerator = new AtomicLong(1);
     private final AtomicLong transactionIdGenerator = new AtomicLong(1);
 
@@ -26,15 +24,17 @@ public final class Blockchain implements Serializable {
     private final List<Block> blockchain;
     private final List<Transaction> transactions;
     private int difficultLevel;
-    private final Map<Cryptocurrency, Long> rewardForMinedBlock;
+    private final Resources reward;
+    private final int maxNumBlockToMining;
     private Block notMinedBlock;
     private final Timer timer;
 
-    public Blockchain(int difficultLevel, Map<Cryptocurrency, Long> rewardForMinedBlock) {
+    public Blockchain(int difficultLevel, Resources reward, int maxNumBlockToMining) {
         this.blockchain = new LinkedList<>();
         this.transactions = new LinkedList<>();
         this.difficultLevel = difficultLevel;
-        this.rewardForMinedBlock = rewardForMinedBlock;
+        this.reward = reward;
+        this.maxNumBlockToMining = maxNumBlockToMining;
         this.timer = new Timer();
 
         generateNewBlock();
@@ -49,9 +49,9 @@ public final class Blockchain implements Serializable {
     }
 
     public Optional<Block> getBlock(int blockNum) {
-        boolean isBlockExists = (blockNum < 0 || blockNum >= blockchain.size());
+        boolean isBlockExists = (blockNum >= 0 && blockNum < blockchain.size());
 
-        return isBlockExists ? Optional.empty() : Optional.of(new Block(blockchain.get(blockNum)));
+        return isBlockExists ? Optional.of(new Block(blockchain.get(blockNum))) : Optional.empty();
     }
 
     public synchronized boolean addBlock(Block block, User miner) {
@@ -59,19 +59,15 @@ public final class Blockchain implements Serializable {
             return false;
         }
 
-        block.setTimeGeneration(timer.elapsed());
         block.setCreator(miner);
         block.setTransactions(transactions);
 
-        miner.addResources(rewardForMinedBlock);
+        miner.getWallet().addAmount(reward.getAmount());
 
         blockchain.add(new Block(block));
 
-        generateNewBlock();
-        regulateDifficultLevel();
-        resetTimer();
-        clearTransactions();
-        checkIfAllBlocksMined();
+        executeTransactions();
+        updateStatus();
 
         return true;
     }
@@ -80,23 +76,26 @@ public final class Blockchain implements Serializable {
                                             PrivateKey privateKey) throws SignatureException,
                                                                           NoSuchAlgorithmException,
                                                                           InvalidKeyException, IOException {
-        if (isValidTransaction(transaction)) {
-            transaction.setId(transactionIdGenerator.getAndIncrement());
-            transaction.sign(privateKey);
+        transaction.setId(transactionIdGenerator.getAndIncrement());
+        transaction.sign(privateKey);
 
-            transactions.add(new Transaction(transaction));
-        }
+        transactions.add(new Transaction(transaction));
     }
 
-    public Boolean isValidChain() throws SignatureException, NoSuchAlgorithmException,
-                                         InvalidKeyException, IOException {
+    public List<Transaction> getAllTransactions() {
+        return blockchain.stream()
+                         .map(Block::getTransactions)
+                         .flatMap(Collection::stream)
+                         .collect(Collectors.toList());
+    }
+
+    public Boolean isValidChain() {
         return areValidPrevHashes() && areValidTransactions();
     }
 
     public boolean areAllBlocksMined() {
         return areAllBlocksMined.get();
     }
-
 
     @Override
     public String toString() {
@@ -124,15 +123,12 @@ public final class Blockchain implements Serializable {
         return true;
     }
 
-    private boolean areValidTransactions() throws IOException, NoSuchAlgorithmException,
-                                                  InvalidKeyException, SignatureException {
+    private boolean areValidTransactions() {
         long transactionId = -1;
 
         for (var block : blockchain) {
             for (var transaction : block.getTransactions()) {
-                if (transaction.getId() <= transactionId ||
-                    !ObjectSignature.verify(transaction, transaction.getSignature(),
-                                            transaction.getPublicKey())) {
+                if (transaction.getId() <= transactionId) {
                     return false;
                 }
 
@@ -143,30 +139,22 @@ public final class Blockchain implements Serializable {
         return true;
     }
 
-    private boolean isValidTransaction(Transaction transaction) {
-        var resourcesFrom = transaction.getFrom().getWallet().getResources();
-
-        return transaction.getResources()
-                          .entrySet()
-                          .stream()
-                          .allMatch(r -> r.getValue() <= resourcesFrom.get(r.getKey()));
-    }
-
     private void regulateDifficultLevel() {
-        long timeGeneration = getLastBlock().isPresent() ? getLastBlock().get().getTimeGeneration() : 0;
+        long timeGeneration = timer.elapsed();
 
         if (timeGeneration <= 1) {
             ++difficultLevel;
         } else if(timeGeneration > 60) {
             --difficultLevel;
         }
+
+        timer.reset();
     }
 
     private void generateNewBlock() {
         long blockId = blockIdGenerator.getAndIncrement();
         long timestamp = new Date().getTime();
-        String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getHash()
-                                                          : "0";
+        String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getHash() : "0";
 
         notMinedBlock = new Block(blockId, timestamp, prevBlockHash);
     }
@@ -176,17 +164,20 @@ public final class Blockchain implements Serializable {
                                     : Optional.of(new Block(blockchain.get(blockchain.size() - 1)));
     }
 
-    private void checkIfAllBlocksMined() {
-        if (blockchain.size() >= MAX_NUM_BLOCKS_TO_MINING) {
+    private void updateStatus() {
+        if (blockchain.size() >= maxNumBlockToMining) {
             areAllBlocksMined.set(true);
+        } else {
+            generateNewBlock();
+            regulateDifficultLevel();
         }
     }
 
-    private void resetTimer() {
-        timer.reset();
-    }
+    private void executeTransactions() {
+        for (var transaction : transactions) {
+            transaction.execute();
+        }
 
-    private void clearTransactions() {
         transactions.clear();
     }
 }

@@ -20,9 +20,7 @@ public class Wallet implements Serializable {
     }
 
     public void subtractAmount(int amount) {
-        if (resources.getAmount() >= amount) {
-            resources.subtractAmount(amount);
-        }
+        resources.subtractAmount(amount);
     }
 
     @Override

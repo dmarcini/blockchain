@@ -1,27 +1,25 @@
-package com.dmarcini.app.blockchainsystem;
+package com.dmarcini.app.blockchain;
 
-import com.dmarcini.app.reward.Cryptocurrency;
+import com.dmarcini.app.resources.Resources;
 import com.dmarcini.app.users.User;
 import com.dmarcini.app.utils.cryptography.ObjectSignature;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public final class Transaction implements Serializable {
     private long id;
     private final User from;
     private final User to;
-    private final Map<Cryptocurrency, Long> resources;
+    private final Resources resources;
     private final PublicKey publicKey;
     private byte[] signature;
 
-    public Transaction(User from, User to, Map<Cryptocurrency, Long> resources, PublicKey publicKey) {
+    public Transaction(User from, User to, Resources resources, PublicKey publicKey) {
         this.from = from;
         this.to = to;
-        this.resources = new HashMap<>(resources);
+        this.resources = new Resources(resources);
         this.publicKey = publicKey;
     }
 
@@ -29,7 +27,7 @@ public final class Transaction implements Serializable {
         this.id = transaction.id;
         this.from = transaction.from;
         this.to = transaction.to;
-        this.resources = new HashMap<>(transaction.resources);
+        this.resources = new Resources(transaction.resources);
         this.publicKey = transaction.publicKey;
         this.signature = transaction.signature.clone();
     }
@@ -50,7 +48,7 @@ public final class Transaction implements Serializable {
         return to;
     }
 
-    public Map<Cryptocurrency, Long> getResources() {
+    public Resources getResources() {
         return resources;
     }
 
@@ -65,5 +63,24 @@ public final class Transaction implements Serializable {
     public void sign(PrivateKey privateKey) throws IOException, NoSuchAlgorithmException,
                                                    InvalidKeyException, SignatureException {
         signature = ObjectSignature.sign(this, privateKey);
+    }
+
+    public void execute() {
+        if (isValid()) {
+            from.getWallet().subtractAmount(resources.getAmount());
+            to.getWallet().addAmount(resources.getAmount());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction id = " + id + "\n" +
+               "From: " + from.getName() + "\n" +
+               "To: " + to.getName() + "\n" +
+               "Resources: " + resources.getAmount() + resources.getCryptocurrency().getCurrency() + "\n";
+    }
+
+    private boolean isValid() {
+        return from.getWallet().getResources().getAmount() >= resources.getAmount();
     }
 }
