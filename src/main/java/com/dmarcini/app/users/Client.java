@@ -18,10 +18,10 @@ public final class Client extends User {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
 
-    public Client(String name, Blockchain blockchain,
-                  Cryptocurrency cryptocurrency,
-                  TransactionPool transactionPool) throws NoSuchAlgorithmException {
-        super(name, blockchain, cryptocurrency, transactionPool);
+    public Client(String name, Blockchain blockchain, Cryptocurrency cryptocurrency,
+                  TransactionPool transactionPool, int startAmount) throws NoSuchAlgorithmException,
+                                                                           NegativeAmountException {
+        super(name, blockchain, cryptocurrency, transactionPool, startAmount);
 
         RSAKeysGenerator RSAKeysGenerator = new RSAKeysGenerator(KEY_LENGTH);
 
@@ -53,14 +53,18 @@ public final class Client extends User {
                                         InvalidKeyException, IOException, InterruptedException {
         Optional<User> to;
 
-        do {
-            to = transactionPool.getUser(generator.nextInt(transactionPool.getUsersNum()));
-        } while(to.get().getId() == id);
+        if (transactionPool.getUsersNum() > 0) {
+            do {
+                to = transactionPool.getUser(generator.nextInt(transactionPool.getUsersNum()));
+            } while(to.get().getId() == id);
 
-        Resources resources = new Resources(transactionPool.getCryptocurrency(), generator.nextInt(100));
-        Transaction transaction = new Transaction(this, to.get(), resources, publicKey);
+            Resources resources = new Resources(transactionPool.getCryptocurrency(), generator.nextInt(100));
+            Transaction transaction = new Transaction(this, to.get(), resources, publicKey);
 
-        blockchain.addTransaction(transaction, privateKey);
+            synchronized (blockchain) {
+                blockchain.addTransaction(transaction, privateKey);
+            }
+        }
 
         Thread.sleep(500 + generator.nextInt(500));
     }

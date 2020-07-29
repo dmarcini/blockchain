@@ -37,16 +37,19 @@ but despite this, information about this transaction is keep in the block.
 </br>
 For every block mined, miner who found as first magic number
 is getting a specific reward in cryptocurrency.
+
 ---
 
 ## Technology
 * Java SE
 * Apache Maven
+
 ---
 
 ## Requirements
 * Java SE 14 JRE installed
 * Apache Maven 3.6.x installed (at least)
+
 ---
 
 ## Building & Running
@@ -58,6 +61,7 @@ mvn package
 
 java -jar target/blockchain-1.0-SNAPSHOT.jar
 ```
+
 ---
 
 ## Sources

@@ -11,6 +11,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,28 +50,23 @@ public final class Blockchain implements Serializable {
         return notMinedBlock;
     }
 
-    public synchronized boolean addBlock(Block block, User miner) throws NegativeAmountException {
-        if (!isValidBlock(block)) {
-            return false;
+    public void addBlock(Block block, User miner) throws NegativeAmountException {
+        if (isValidBlock(block)) {
+            block.setMiner(miner);
+            block.setTransactions(transactions);
+
+            miner.getWallet().addAmount(reward.getAmount());
+
+            blockchain.add(new Block(block));
+
+            executeTransactions();
+            updateStatus();
         }
-
-        block.setMiner(miner);
-        block.setTransactions(transactions);
-
-        miner.getWallet().addAmount(reward.getAmount());
-
-        blockchain.add(new Block(block));
-
-        executeTransactions();
-        updateStatus();
-
-        return true;
     }
 
-    public synchronized void addTransaction(Transaction transaction,
-                                            PrivateKey privateKey) throws SignatureException,
-                                                                          NoSuchAlgorithmException,
-                                                                          InvalidKeyException, IOException {
+    public void addTransaction(Transaction transaction,
+                               PrivateKey privateKey) throws SignatureException, NoSuchAlgorithmException,
+                                                             InvalidKeyException, IOException {
         transaction.setId(transactionIdGenerator.getAndIncrement());
         transaction.sign(privateKey);
 
@@ -104,8 +100,10 @@ public final class Blockchain implements Serializable {
     private boolean isValidBlock(Block block) {
         String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getHash() : "0";
 
-        return block.getHash().startsWith("0".repeat(difficultLevel)) &&
-               block.getPrevHash().equals(prevBlockHash);
+        boolean startsWithCorrectZerosNum = block.getHash().startsWith("0".repeat(difficultLevel));
+        boolean arePrevHashEquals = block.getPrevHash().equals(prevBlockHash);
+
+        return startsWithCorrectZerosNum && arePrevHashEquals;
     }
 
     private boolean areValidPrevHashes() {
@@ -134,6 +132,28 @@ public final class Blockchain implements Serializable {
         return true;
     }
 
+    private Optional<Block> getLastBlock() {
+        return blockchain.isEmpty() ? Optional.empty()
+                                    : Optional.of(new Block(blockchain.get(blockchain.size() - 1)));
+    }
+
+    private void executeTransactions() {
+        for (var transaction : transactions) {
+            transaction.execute();
+        }
+
+        transactions.clear();
+    }
+
+    private void updateStatus() {
+        if (blockchain.size() >= maxNumBlockToMining) {
+            areAllBlocksMined.set(true);
+        } else {
+            regulateDifficultLevel();
+            generateNewBlock();
+        }
+    }
+
     private void regulateDifficultLevel() {
         long timeGeneration = timer.elapsed();
 
@@ -152,27 +172,5 @@ public final class Blockchain implements Serializable {
         String prevBlockHash = getLastBlock().isPresent() ? getLastBlock().get().getHash() : "0";
 
         notMinedBlock = new Block(blockId, timestamp, prevBlockHash);
-    }
-
-    private Optional<Block> getLastBlock() {
-        return blockchain.isEmpty() ? Optional.empty()
-                                    : Optional.of(new Block(blockchain.get(blockchain.size() - 1)));
-    }
-
-    private void updateStatus() {
-        if (blockchain.size() >= maxNumBlockToMining) {
-            areAllBlocksMined.set(true);
-        } else {
-            generateNewBlock();
-            regulateDifficultLevel();
-        }
-    }
-
-    private void executeTransactions() {
-        for (var transaction : transactions) {
-            transaction.execute();
-        }
-
-        transactions.clear();
     }
 }

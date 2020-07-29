@@ -2,6 +2,7 @@ package com.dmarcini.app.users;
 
 import com.dmarcini.app.blockchain.Blockchain;
 import com.dmarcini.app.blockchain.TransactionPool;
+import com.dmarcini.app.resources.NegativeAmountException;
 import com.dmarcini.app.resources.Wallet;
 import com.dmarcini.app.reward.Cryptocurrency;
 
@@ -20,13 +21,15 @@ public abstract class User implements Serializable, Runnable {
     protected final Wallet wallet;
     protected final TransactionPool transactionPool;
 
-    User(String name, Blockchain blockchain,
-         Cryptocurrency cryptocurrency, TransactionPool transactionPool) {
+    User(String name, Blockchain blockchain, Cryptocurrency cryptocurrency,
+         TransactionPool transactionPool, int startAmount) throws NegativeAmountException {
         this.id = userIdGenerator.getAndIncrement();
         this.name = name;
         this.blockchain = blockchain;
         this.wallet = new Wallet(cryptocurrency);
         this.transactionPool = transactionPool;
+
+        this.wallet.addAmount(startAmount);
     }
 
     public long getId() {

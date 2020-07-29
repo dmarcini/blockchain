@@ -41,10 +41,6 @@ public final class Block implements Serializable {
         return timestamp;
     }
 
-    public int getNonce() {
-        return nonce;
-    }
-
     public String getPrevHash() {
         return prevHash;
     }
@@ -67,10 +63,6 @@ public final class Block implements Serializable {
         this.transactions = transactions.stream()
                                         .map(Transaction::new)
                                         .collect(Collectors.toList());
-    }
-
-    public User getMiner() {
-        return miner;
     }
 
     public void setMiner(User miner) {

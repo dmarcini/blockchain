@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
-public class TransactionPool implements Serializable {
+public final class TransactionPool implements Serializable {
     private List<User> users;
     private final Cryptocurrency cryptocurrency;
 
@@ -24,9 +24,7 @@ public class TransactionPool implements Serializable {
     }
 
     public Optional<User> getUser(int id) {
-        boolean isUserExists = (id >= 0 && id < users.size());
-
-        return isUserExists ? Optional.of(users.get(id)) : Optional.empty();
+        return (id >= 0 && id < users.size()) ? Optional.of(users.get(id)) : Optional.empty();
     }
 
     public Cryptocurrency getCryptocurrency() {

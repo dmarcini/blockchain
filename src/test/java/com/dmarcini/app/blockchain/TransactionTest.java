@@ -35,12 +35,12 @@ class TransactionTest {
 
     @Test
     void sign_SignTransactionWithCorrectKey_Succeed() throws NoSuchAlgorithmException, InvalidKeyException,
-                                                             IOException, SignatureException {
+                                                             IOException, SignatureException, NegativeAmountException {
         Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
         TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
-        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool, 100);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool, 100);
 
         Resources resources = new Resources(new VirtualCoin(), 50);
 
@@ -54,12 +54,12 @@ class TransactionTest {
 
     @Test
     void sign_SignTransactionWithIncorrectKey_Failed() throws NoSuchAlgorithmException, InvalidKeyException,
-            IOException, SignatureException {
+                                                              IOException, SignatureException, NegativeAmountException {
         Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
         TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
-        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool, 100);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool, 100);
 
         Resources resources = new Resources(new VirtualCoin(), 50);
 
@@ -77,12 +77,10 @@ class TransactionTest {
         Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
         TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
-        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool, 50);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool, 0);
 
         Resources resources = new Resources(new VirtualCoin(), 50);
-
-        from.getWallet().addAmount(50);
 
         Transaction transaction = new Transaction(from, to, resources, publicKey);
 
@@ -98,12 +96,10 @@ class TransactionTest {
         Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
         TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
-        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool, 50);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool, 0);
 
         Resources resources = new Resources(new VirtualCoin(), 100);
-
-        from.getWallet().addAmount(50);
 
         Transaction transaction = new Transaction(from, to, resources, publicKey);
 

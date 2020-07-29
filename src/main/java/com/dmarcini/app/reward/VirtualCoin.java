@@ -2,7 +2,7 @@ package com.dmarcini.app.reward;
 
 import java.io.Serializable;
 
-public class VirtualCoin implements Cryptocurrency, Serializable {
+public final class VirtualCoin implements Cryptocurrency, Serializable {
     private final String currency;
     private final int value;
 

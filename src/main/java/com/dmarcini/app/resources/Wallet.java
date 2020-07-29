@@ -4,7 +4,7 @@ import com.dmarcini.app.reward.Cryptocurrency;
 
 import java.io.Serializable;
 
-public class Wallet implements Serializable {
+public final class Wallet implements Serializable {
     private final Resources resources;
 
     public Wallet(Cryptocurrency cryptocurrency) {
@@ -21,10 +21,5 @@ public class Wallet implements Serializable {
 
     public void subtractAmount(int amount) throws NegativeAmountException {
         resources.subtractAmount(amount);
-    }
-
-    @Override
-    public String toString() {
-        return resources.getAmount() + resources.getCryptocurrency().getCurrency();
     }
 }

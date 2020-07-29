@@ -36,31 +36,35 @@ class BlockchainTest {
     void addValidBlock_IsValidDifficultLevel_Succeed() throws NegativeAmountException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool, 100);
         Block block = new Block(1, 1, "0");
 
         block.setHash("00A1");
 
-        Assertions.assertTrue(blockchain.addBlock(block, miner));
+        blockchain.addBlock(block, miner);
+
+        Assertions.assertEquals(1, blockchain.getSize());
     }
 
     @Test
     void addValidBlock_IsValidDifficultLevel_Failed() throws NegativeAmountException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool, 100);
         Block block = new Block(1, 1, "0");
 
         block.setHash("0A1");
 
-        Assertions.assertFalse(blockchain.addBlock(block, miner));
+        blockchain.addBlock(block, miner);
+
+        Assertions.assertEquals(0, blockchain.getSize());
     }
 
     @Test
     void addBlock_IsValidPrevBlockHash_Succeed() throws NegativeAmountException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool, 100);
         Block block = new Block(1, 1, "0");
 
         block.setHash("00A1");
@@ -71,14 +75,16 @@ class BlockchainTest {
 
         block.setHash("00B1");
 
-        Assertions.assertTrue(blockchain.addBlock(block, miner));
+        blockchain.addBlock(block, miner);
+
+        Assertions.assertEquals(2, blockchain.getSize());
     }
 
     @Test
     void addBlock_IsValidPrevBlockHash_Failed() throws NegativeAmountException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool, 100);
         Block block = new Block(1, 1, "0");
 
         block.setHash("00A1");
@@ -89,7 +95,9 @@ class BlockchainTest {
 
         block.setHash("00B1");
 
-        Assertions.assertFalse(blockchain.addBlock(block, miner));
+        blockchain.addBlock(block, miner);
+
+        Assertions.assertEquals(1, blockchain.getSize());
     }
 
 
@@ -97,7 +105,7 @@ class BlockchainTest {
     void isValid_ArePrevHashesValid_True() throws NegativeAmountException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool, 100);
         Block block1 = new Block(1, 1, "0");
         Block block2 = new Block(2, 1, "00A1");
         Block block3 = new Block(3, 1, "00B1");
@@ -117,11 +125,11 @@ class BlockchainTest {
     void isValid_ArePrevHashesValid_False() throws NoSuchFieldException, IllegalAccessException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        List<Block> blocksList = new ArrayList<>();
-
-        blocksList.add(new Block(1, 1, "0"));
-        blocksList.add(new Block(2, 1, "00D1"));
-        blocksList.add(new Block(3, 1, "00B1"));
+        List<Block> blocksList = new ArrayList<>(Arrays.asList(
+                new Block(1, 1, "0"),
+                new Block(2, 1, "00D1"),
+                new Block(3, 1, "00B1")
+        ));
 
         var blocks = Blockchain.class.getDeclaredField("blockchain");
 
@@ -137,13 +145,10 @@ class BlockchainTest {
         Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
         TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
-        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool, 100);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool, 100);
 
         Resources resources = new Resources(new VirtualCoin(), 1);
-
-        from.getWallet().addAmount(100);
-        to.getWallet().addAmount(100);
 
         blockchain.addTransaction(new Transaction(from ,to, resources, publicKey), privateKey);
         blockchain.addTransaction(new Transaction(to, from, resources, publicKey), privateKey);
@@ -172,13 +177,10 @@ class BlockchainTest {
         Blockchain blockchain = new Blockchain(0, new Resources(new VirtualCoin(), 100), 5);
         TransactionPool transactionPool = new TransactionPool(new VirtualCoin());
 
-        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool);
-        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool);
+        User from = new Client("Mary", blockchain, new VirtualCoin(), transactionPool, 100);
+        User to = new Client("Henry", blockchain, new VirtualCoin(), transactionPool,100);
 
         Resources resources = new Resources(new VirtualCoin(), 1);
-
-        from.getWallet().addAmount(100);
-        to.getWallet().addAmount(100);
 
         Transaction transaction1 = new Transaction(from ,to, resources, publicKey);
         Transaction transaction2 = new Transaction(to, from, resources, publicKey);
@@ -225,16 +227,13 @@ class BlockchainTest {
                                                                                         IOException {
         Blockchain blockchain = new Blockchain(2, reward, 1);
 
-        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool);
-        User client = new Miner("Theresa", blockchain, new VirtualCoin(), transactionPool);
+        User miner = new Miner("Damian", blockchain, new VirtualCoin(), transactionPool, 100);
+        User client = new Miner("Theresa", blockchain, new VirtualCoin(), transactionPool, 100);
         Resources resources = new Resources(new VirtualCoin(), 5);
         Block block1 = new Block(1, 1, "0");
         Block block2 = new Block(2, 1, "00A1");
         Transaction transaction1 = new Transaction(miner, client, resources, publicKey);
         Transaction transaction2 = new Transaction(client, miner, resources, publicKey);
-
-        miner.getWallet().addAmount(100);
-        client.getWallet().addAmount(100);
 
         block1.setHash("00A1");
         block2.setHash("00B1");

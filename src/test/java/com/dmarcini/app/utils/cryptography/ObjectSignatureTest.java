@@ -57,10 +57,10 @@ class ObjectSignatureTest {
         var testObject = new TestObject("Lorem ipsum dolor sit", 2020);
 
         var signature = ObjectSignature.sign(BytesConverter.toBytes(testObject),
-                                           ObjectSignature.getPrivateKey(PRIVATE_KEY_FROM_PAIR_PATH));
+                                                    ObjectSignature.getPrivateKey(PRIVATE_KEY_FROM_PAIR_PATH));
 
         Assertions.assertTrue(ObjectSignature.verify(BytesConverter.toBytes(testObject), signature,
-                                                   ObjectSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
+                                                     ObjectSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));
     }
 
     @Test
@@ -70,7 +70,7 @@ class ObjectSignatureTest {
         var testObject = new TestObject("Lorem ipsum dolor sit", 2020);
 
         var signature = ObjectSignature.sign(BytesConverter.toBytes(testObject),
-                                           ObjectSignature.getPrivateKey(PRIVATE_KEY_NOT_FROM_PAIR_PATH));
+                                                    ObjectSignature.getPrivateKey(PRIVATE_KEY_NOT_FROM_PAIR_PATH));
 
         Assertions.assertFalse(ObjectSignature.verify(BytesConverter.toBytes(testObject), signature,
                                ObjectSignature.getPublicKey(PUBLIC_KEY_FROM_PAIR_PATH)));

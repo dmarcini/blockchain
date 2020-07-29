@@ -22,11 +22,11 @@ class SerializationTest {
             throw new IOException("Cannot create dir!");
         }
 
-        ArrayList<SerializableObject.TestObject> objects = new ArrayList<>(
-                Arrays.asList(new SerializableObject.TestObject("lorem"),
-                        new SerializableObject.TestObject("ipsum"),
-                        new SerializableObject.TestObject("dolor"))
-        );
+        ArrayList<SerializableObject.TestObject> objects = new ArrayList<>(Arrays.asList(
+                new SerializableObject.TestObject("lorem"),
+                new SerializableObject.TestObject("ipsum"),
+                new SerializableObject.TestObject("dolor")
+        ));
 
         testObject = new SerializableObject(objects, "sit", 2020);
     }
@@ -107,5 +107,4 @@ class SerializationTest {
             }
         }
     }
-
 }
